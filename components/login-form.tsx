@@ -1,3 +1,4 @@
+'use client'
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import {
@@ -14,11 +15,61 @@ import {
   FieldLabel,
 } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
+import { useRouter } from "next/navigation"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+
+import { loginSchema, LoginFormData } from "@/lib/schemas/auth.schema"
 
 export function LoginForm({
   className,
   ...props
 }: React.ComponentProps<"div">) {
+  const router = useRouter()
+
+  const {
+    register,
+    handleSubmit,
+    setError,
+    clearErrors,
+    formState: { errors, isSubmitting },
+  } = useForm<LoginFormData>({
+    resolver: zodResolver(loginSchema),
+  })
+
+  const onSubmit = async (data: LoginFormData) => {
+    try {
+      clearErrors("root")
+
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      })
+
+      const result = await response.json()
+
+      if (!response.ok || result.error) {
+        setError("root", {
+          type: "server",
+          message: result.error || "Failed to login. Please try again."
+        })
+        return
+      }
+
+      // 4. Success: redirect and refresh server components
+      router.push("/")
+      router.refresh()
+    } catch {
+      setError("root", {
+        type: "server",
+        message: "An unexpected error occurred. Please try again."
+      })
+    }
+  }
+
   return (
     <div className={cn("flex flex-col gap-6", className)} {...props}>
       <Card>
@@ -29,7 +80,7 @@ export function LoginForm({
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form>
+          <form onSubmit={handleSubmit(onSubmit)} className="grid w-full gap-6">
             <FieldGroup>
               <Field>
                 <FieldLabel htmlFor="email">Email</FieldLabel>
@@ -38,7 +89,15 @@ export function LoginForm({
                   type="email"
                   placeholder="m@example.com"
                   required
+                  {...register("email")}
                 />
+                {
+                  errors.root && (
+                    <FieldDescription className="text-destructive">
+                      {errors.root.message}
+                    </FieldDescription>
+                  )
+                }
               </Field>
               <Field>
                 <div className="flex items-center">
@@ -50,12 +109,21 @@ export function LoginForm({
                     Forgot your password?
                   </a>
                 </div>
-                <Input id="password" type="password" required />
+                <Input id="password" type="password" required {...register("password")} />
+                {
+                  errors.root && (
+                    <FieldDescription className="text-destructive">
+                      {errors.root.message}
+                    </FieldDescription>
+                  )
+                }
               </Field>
               <Field>
-                <Button type="submit">Login</Button>
+                <Button type="submit" disabled={isSubmitting}>
+                  {isSubmitting ? "Logging in..." : "Login"}
+                </Button>
                 <FieldDescription className="text-center">
-                  Don&apos;t have an account? <a href="#">Sign up</a>
+                  Don&apos;t have an account? <a href="/register">Sign up</a>
                 </FieldDescription>
               </Field>
             </FieldGroup>
