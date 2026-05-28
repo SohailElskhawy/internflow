@@ -1,6 +1,8 @@
 'use client'
+import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Eye, EyeOff } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -26,6 +28,7 @@ export function LoginForm({
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter()
+  const [showPassword, setShowPassword] = useState(false)
 
   const {
     register,
@@ -109,7 +112,12 @@ export function LoginForm({
                     Forgot your password?
                   </a>
                 </div>
-                <Input id="password" type="password" required {...register("password")} />
+                <div className="relative">
+                  <Input id="password" type={showPassword ? "text" : "password"} required {...register("password")} className="pr-10" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {
                   errors.root && (
                     <FieldDescription className="text-destructive">

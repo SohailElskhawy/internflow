@@ -26,11 +26,12 @@ export async function POST(req: Request) {
         });
 
         return response;
-    } catch (error: any) {
+    } catch (error: unknown) {
         // Specifically trap Prisma unique constraint errors if you are enforcing unique emails!
-        if (error.code === 'P2002') {
+        if (typeof error === 'object' && error !== null && 'code' in error && (error as { code: string }).code === 'P2002') {
             return NextResponse.json({ error: "Email already in use" }, { status: 400 });
         }
+        console.error("Registration error:", error);
         return NextResponse.json({ error: "Registration failed" }, { status: 500 });
     }
 }

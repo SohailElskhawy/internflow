@@ -1,7 +1,7 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "./lib/auth";
 
-export function proxy(req: any) {
+export function proxy(req: NextRequest) {
     const { pathname } = req.nextUrl;
 
     const publicPaths = ["/login", "/register"];

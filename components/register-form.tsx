@@ -1,6 +1,8 @@
 'use client'
+import { useState } from "react"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
+import { Eye, EyeOff } from "lucide-react"
 import {
   Card,
   CardContent,
@@ -26,6 +28,8 @@ export function RegisterForm({
   ...props
 }: React.ComponentProps<"div">) {
   const router = useRouter()
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
 
   const {
     register,
@@ -139,20 +143,23 @@ export function RegisterForm({
                 <div className="flex items-center">
                   <FieldLabel htmlFor="password">Password</FieldLabel>
                 </div>
-                <Input id="password" type="password" required {...register("password")} />
-                {
-                  errors.root && (
-                    <FieldDescription className="text-destructive">
-                      {errors.root.message}
-                    </FieldDescription>
-                  )
-                }
+                <div className="relative">
+                  <Input id="password" type={showPassword ? "text" : "password"} required {...register("password")} className="pr-10" />
+                  <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
               </Field>
               <Field>
                 <div className="flex items-center">
-                  <FieldLabel htmlFor="password">Confirm Password</FieldLabel>
+                  <FieldLabel htmlFor="confirm-password">Confirm Password</FieldLabel>
                 </div>
-                <Input id="confirm-password" type="password" required {...register("confirmPassword")} />
+                <div className="relative">
+                  <Input id="confirm-password" type={showConfirmPassword ? "text" : "password"} required {...register("confirmPassword")} className="pr-10" />
+                  <button type="button" onClick={() => setShowConfirmPassword(!showConfirmPassword)} className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </button>
+                </div>
                 {
                   errors.root && (
                     <FieldDescription className="text-destructive">
