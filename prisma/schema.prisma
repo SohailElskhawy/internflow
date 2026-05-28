@@ -1,1 +1,78 @@
-  
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+model User {
+    id        String   @id @default(uuid())
+    name      String
+    email     String   @unique
+    password  String
+    role      Role
+    createdAt DateTime @default(now())
+
+    student StudentProfile?
+    company Company?
+}
+
+model StudentProfile {
+    id         String   @id @default(uuid())
+    userId     String   @unique
+    university String
+    major      String
+    skills     String[]
+    cvUrl      String?
+
+    user         User          @relation(fields: [userId], references: [id])
+    applications Application[]
+}
+
+model Company {
+    id          String  @id @default(uuid())
+    userId      String  @unique
+    name        String
+    description String
+    approved    Boolean @default(false)
+
+    user        User         @relation(fields: [userId], references: [id])
+    internships Internship[]
+}
+
+model Internship {
+    id          String   @id @default(uuid())
+    title       String
+    description String
+    location    String
+    type        String
+    companyId   String
+    createdAt   DateTime @default(now())
+
+    company      Company       @relation(fields: [companyId], references: [id])
+    applications Application[]
+}
+
+model Application {
+    id           String   @id @default(uuid())
+    studentId    String
+    internshipId String
+    status       Status   @default(PENDING)
+    createdAt    DateTime @default(now())
+
+    student    StudentProfile @relation(fields: [studentId], references: [id])
+    internship Internship     @relation(fields: [internshipId], references: [id])
+}
+
+enum Role {
+    STUDENT
+    COMPANY
+    ADMIN
+}
+
+enum Status {
+    PENDING
+    ACCEPTED
+    REJECTED
+}
