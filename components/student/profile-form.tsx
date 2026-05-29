@@ -90,6 +90,7 @@ export function ProfileForm({
             }
 
             router.refresh()
+            window.location.reload()
         } catch {
             setError("root", {
                 type: "server",
