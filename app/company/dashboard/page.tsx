@@ -2,6 +2,7 @@ import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import { CreateInternshipForm } from "@/components/company/create-internship-form";
+import { CreateCompanyProfileForm } from "@/components/company/create-company-profile-form";
 import { getCompanyByUserId } from "@/lib/services/company.service";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 
@@ -23,13 +24,8 @@ export default async function CompanyDashboardPage() {
 
     if (!company) {
         return (
-            <div className="container mx-auto p-4 max-w-4xl mt-10">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Company Dashboard</CardTitle>
-                        <CardDescription>Please create a company profile first.</CardDescription>
-                    </CardHeader>
-                </Card>
+            <div className="container mx-auto p-4 max-w-4xl mt-10 flex justify-center">
+                <CreateCompanyProfileForm />
             </div>
         );
     }
