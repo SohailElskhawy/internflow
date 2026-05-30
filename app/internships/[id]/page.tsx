@@ -1,13 +1,14 @@
 import { getInternshipById } from "@/lib/services/internship.service";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/auth";
 
-export default async function InternshipDetailsPage({ params }: { params: { id: string } }) {
-    const internship = await getInternshipById(params.id);
+export default async function InternshipDetailsPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = await params;
+    const internship = await getInternshipById(id);
 
     if (!internship) {
         notFound();
