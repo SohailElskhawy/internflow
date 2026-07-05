@@ -53,20 +53,28 @@ export function RegisterForm({
         body: JSON.stringify(data),
       })
 
-      const result = await response.json()
+      let result: { success?: boolean; error?: string; token?: string } = {}
+      try {
+        result = await response.json()
+      } catch (jsonErr) {
+        console.error("JSON parse error from /api/auth/register:", jsonErr)
+      }
 
       if (!response.ok || result.error) {
+        const errorMsg = result.error || "Failed to register. Please try again."
+        console.warn("Registration failed:", errorMsg, result)
         setError("root", {
           type: "server",
-          message: result.error || "Failed to register. Please try again."
+          message: errorMsg
         })
         return
       }
 
-      // 4. Success: redirect and refresh server components
+      // Success: redirect and refresh server components
       router.push("/")
       router.refresh()
-    } catch {
+    } catch (err) {
+      console.error("Register submission error:", err)
       setError("root", {
         type: "server",
         message: "An unexpected error occurred. Please try again."

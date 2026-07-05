@@ -21,20 +21,25 @@ export function proxy(req: NextRequest) {
 
   // Public API prefixes
   const publicApiPrefixes = ["/api/auth/login", "/api/auth/register", "/api/auth/logout"];
-  const isPublicApi = publicApiPrefixes.some((prefix) => pathname.startsWith(prefix)) ||
+  const isPublicApi =
+    publicApiPrefixes.some((prefix) => pathname.startsWith(prefix)) ||
     (pathname === "/api/internships" && req.method === "GET");
 
   const token = req.cookies.get("token")?.value;
   const decoded = token ? (verifyToken(token) as { id: string; role: string } | null) : null;
 
-  // Protect non-public API routes
-  if (pathname.startsWith("/api") && !isPublicApi) {
-    if (!decoded) {
-      return NextResponse.json({ success: false, error: "Unauthorized access token" }, { status: 401 });
+  // Handle API routes separately (Never redirect API routes to HTML pages)
+  if (pathname.startsWith("/api")) {
+    if (!isPublicApi && !decoded) {
+      return NextResponse.json(
+        { success: false, error: "Unauthorized: Authentication token required" },
+        { status: 401 }
+      );
     }
+    return NextResponse.next();
   }
 
-  // Redirect unauthenticated users visiting protected pages
+  // Redirect unauthenticated users visiting protected HTML pages
   if (!isPublicPage && !decoded) {
     const loginUrl = new URL("/login", req.url);
     loginUrl.searchParams.set("callbackUrl", pathname);
@@ -43,7 +48,7 @@ export function proxy(req: NextRequest) {
 
   // Role-Based Access Control for Pages
   if (decoded) {
-    // If logged-in user visits auth pages, redirect to appropriate home
+    // If logged-in user visits auth pages, redirect to appropriate dashboard
     if (pathname === "/login" || pathname === "/register") {
       const destination = decoded.role === "COMPANY" ? "/company/dashboard" : "/dashboard";
       return NextResponse.redirect(new URL(destination, req.url));

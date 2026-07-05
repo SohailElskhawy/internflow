@@ -5,8 +5,15 @@ import { LoginInput, RegisterInput } from "@/validators/auth.validator";
 import { Role } from "@prisma/client";
 
 export async function loginUser(input: LoginInput) {
-  const user = await prisma.user.findUnique({
-    where: { email: input.email.toLowerCase() },
+  const normalizedEmail = input.email.trim().toLowerCase();
+
+  const user = await prisma.user.findFirst({
+    where: {
+      email: {
+        equals: normalizedEmail,
+        mode: "insensitive",
+      },
+    },
     include: {
       student: true,
       company: true,
@@ -41,8 +48,15 @@ export async function loginUser(input: LoginInput) {
 }
 
 export async function registerUser(input: RegisterInput) {
-  const existingUser = await prisma.user.findUnique({
-    where: { email: input.email.toLowerCase() },
+  const normalizedEmail = input.email.trim().toLowerCase();
+
+  const existingUser = await prisma.user.findFirst({
+    where: {
+      email: {
+        equals: normalizedEmail,
+        mode: "insensitive",
+      },
+    },
   });
 
   if (existingUser) {
@@ -55,8 +69,8 @@ export async function registerUser(input: RegisterInput) {
   const user = await prisma.$transaction(async (tx) => {
     const newUser = await tx.user.create({
       data: {
-        name: input.name,
-        email: input.email.toLowerCase(),
+        name: input.name.trim(),
+        email: normalizedEmail,
         password: hashedPassword,
         role: role,
       },
@@ -75,7 +89,7 @@ export async function registerUser(input: RegisterInput) {
       await tx.company.create({
         data: {
           userId: newUser.id,
-          name: input.name,
+          name: input.name.trim(),
           description: "No description provided yet.",
           approved: false,
         },

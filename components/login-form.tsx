@@ -52,20 +52,28 @@ export function LoginForm({
         body: JSON.stringify(data),
       })
 
-      const result = await response.json()
+      let result: { success?: boolean; error?: string; token?: string } = {}
+      try {
+        result = await response.json()
+      } catch (jsonErr) {
+        console.error("JSON parse error from /api/auth/login:", jsonErr)
+      }
 
       if (!response.ok || result.error) {
+        const errorMsg = result.error || "Failed to login. Please try again."
+        console.warn("Login failed:", errorMsg, result)
         setError("root", {
           type: "server",
-          message: result.error || "Failed to login. Please try again."
+          message: errorMsg
         })
         return
       }
 
-      // 4. Success: redirect and refresh server components
+      // Success: redirect and refresh server components
       router.push("/")
       router.refresh()
-    } catch {
+    } catch (err) {
+      console.error("Login submission error:", err)
       setError("root", {
         type: "server",
         message: "An unexpected error occurred. Please try again."
