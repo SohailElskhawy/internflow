@@ -2,46 +2,73 @@ import { NextRequest, NextResponse } from "next/server";
 import { verifyToken } from "./lib/auth";
 
 export function proxy(req: NextRequest) {
-    const { pathname } = req.nextUrl;
+  const { pathname } = req.nextUrl;
 
-    const publicPaths = ["/login", "/register", "/internships"];
-    const publicApiPrefixes = ["/api/auth", "/api/internships"];
-
-    // Exempt Next.js static assets, favicon, and public listings
-    if (
-        pathname.startsWith("/_next") || 
-        pathname.startsWith("/static") || 
-        pathname === "/favicon.ico"
-    ) {
-        return NextResponse.next();
-    }
-
-    if (
-        publicPaths.some((path) => pathname === path || pathname.startsWith(`${path}/`)) ||
-        publicApiPrefixes.some((prefix) => pathname.startsWith(prefix))
-    ) {
-        return NextResponse.next();
-    }
-
-    const token = req.cookies.get("token")?.value;
-
-    if (!token) {
-        return NextResponse.redirect(new URL("/login", req.url));
-    }
-
-    const decoded = verifyToken(token) as { id: string; role: string } | null;
-    if (!decoded) {
-        return NextResponse.redirect(new URL("/login", req.url));
-    }
-
-    // Role-based route protection
-    if (pathname.startsWith("/company") && decoded.role !== "COMPANY") {
-        return NextResponse.redirect(new URL("/dashboard", req.url));
-    }
-
-    if (pathname.startsWith("/dashboard") && decoded.role !== "STUDENT") {
-        return NextResponse.redirect(new URL("/company/dashboard", req.url));
-    }
-
+  // Next.js static assets, images, favicons
+  if (
+    pathname.startsWith("/_next") ||
+    pathname.startsWith("/static") ||
+    pathname === "/favicon.ico"
+  ) {
     return NextResponse.next();
+  }
+
+  // Public page paths
+  const publicPages = ["/", "/login", "/register", "/internships"];
+  const isPublicPage = publicPages.some(
+    (path) => pathname === path || (path !== "/" && pathname.startsWith(`${path}/`))
+  );
+
+  // Public API prefixes
+  const publicApiPrefixes = ["/api/auth/login", "/api/auth/register", "/api/auth/logout"];
+  const isPublicApi = publicApiPrefixes.some((prefix) => pathname.startsWith(prefix)) ||
+    (pathname === "/api/internships" && req.method === "GET");
+
+  const token = req.cookies.get("token")?.value;
+  const decoded = token ? (verifyToken(token) as { id: string; role: string } | null) : null;
+
+  // Protect non-public API routes
+  if (pathname.startsWith("/api") && !isPublicApi) {
+    if (!decoded) {
+      return NextResponse.json({ success: false, error: "Unauthorized access token" }, { status: 401 });
+    }
+  }
+
+  // Redirect unauthenticated users visiting protected pages
+  if (!isPublicPage && !decoded) {
+    const loginUrl = new URL("/login", req.url);
+    loginUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(loginUrl);
+  }
+
+  // Role-Based Access Control for Pages
+  if (decoded) {
+    // If logged-in user visits auth pages, redirect to appropriate home
+    if (pathname === "/login" || pathname === "/register") {
+      const destination = decoded.role === "COMPANY" ? "/company/dashboard" : "/dashboard";
+      return NextResponse.redirect(new URL(destination, req.url));
+    }
+
+    // Student trying to access company pages
+    if (pathname.startsWith("/company") && decoded.role !== "COMPANY" && decoded.role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/dashboard", req.url));
+    }
+
+    // Company trying to access student dashboard
+    if (pathname.startsWith("/dashboard") && decoded.role !== "STUDENT" && decoded.role !== "ADMIN") {
+      return NextResponse.redirect(new URL("/company/dashboard", req.url));
+    }
+
+    // Non-admin trying to access admin pages
+    if (pathname.startsWith("/admin") && decoded.role !== "ADMIN") {
+      const destination = decoded.role === "COMPANY" ? "/company/dashboard" : "/dashboard";
+      return NextResponse.redirect(new URL(destination, req.url));
+    }
+  }
+
+  return NextResponse.next();
 }
+
+export const config = {
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
+};

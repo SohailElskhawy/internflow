@@ -1,37 +1,47 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import { verifyToken } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/current-user";
+import { requireCompany } from "@/lib/permissions";
+import { companyProfileSchema } from "@/validators/company.validator";
+import { getAllApprovedCompanies, updateCompanyProfile } from "@/lib/services/company.service";
+import { apiSuccess, apiValidationError, apiError, apiForbidden, apiNotFound } from "@/lib/api-response";
+import { logger } from "@/lib/logger";
 
-export async function POST(req: NextRequest) {
+export async function GET() {
+  try {
+    const companies = await getAllApprovedCompanies();
+    return apiSuccess(companies);
+  } catch (error) {
+    logger.error("Error in GET /api/companies", error);
+    return apiError("Failed to fetch companies list", 500);
+  }
+}
+
+export async function POST(req: Request) {
+  try {
+    const user = await getCurrentUser();
+
     try {
-        const token = req.cookies.get("token")?.value;
-        if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-        const decoded = verifyToken(token) as { id: string; role: string } | null;
-        if (!decoded || decoded.role !== "COMPANY") {
-            return NextResponse.json({ error: "Forbidden: Company access required" }, { status: 403 });
-        }
-
-        const userId = decoded.id;
-
-        const body = await req.json();
-        const { name, description } = body;
-
-        if (!name || !description) {
-            return NextResponse.json({ error: "Name and description are required" }, { status: 400 });
-        }
-
-        const company = await prisma.company.create({
-            data: {
-                userId,
-                name,
-                description,
-            },
-        });
-
-        return NextResponse.json(company, { status: 201 });
-    } catch (error) {
-        console.error("POST /api/companies error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+      requireCompany(user);
+    } catch {
+      return apiForbidden("Only companies can set up or update company profiles");
     }
+
+    if (!user?.id) {
+      return apiNotFound("User not found");
+    }
+
+    const body = await req.json();
+    const validation = companyProfileSchema.safeParse(body);
+
+    if (!validation.success) {
+      return apiValidationError(validation.error.flatten().fieldErrors);
+    }
+
+    const company = await updateCompanyProfile(user.id, validation.data);
+    logger.info(`Company profile updated for user ${user.id} (${company.name})`);
+
+    return apiSuccess(company, 200);
+  } catch (error) {
+    logger.error("Error in POST /api/companies", error);
+    return apiError("Failed to save company profile", 500);
+  }
 }
