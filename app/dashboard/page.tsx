@@ -14,9 +14,10 @@ export default function DashboardPage() {
     useEffect(() => {
         fetch("/api/students/profile")
             .then((res) => res.json())
-            .then((data) => {
-                if (!data.error) {
-                    setProfile(data);
+            .then((resData) => {
+                const profileData = resData.data || resData;
+                if (profileData && !resData.error && profileData.university) {
+                    setProfile(profileData);
                 }
             })
             .finally(() => setIsLoading(false));

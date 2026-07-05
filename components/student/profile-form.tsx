@@ -45,11 +45,12 @@ export function ProfileForm({
             try {
                 const response = await fetch("/api/students/profile")
                 if (response.ok) {
-                    const profile = await response.json()
+                    const resData = await response.json()
+                    const profile = resData.data || resData
                     reset({
                         university: profile.university || "",
                         major: profile.major || "",
-                        skills: profile.skills?.join(", ") || "",
+                        skills: Array.isArray(profile.skills) ? profile.skills.join(", ") : "",
                         cvUrl: profile.cvUrl || "",
                     })
                 }
