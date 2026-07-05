@@ -52,7 +52,7 @@ export default async function CompanyDashboardPage() {
 
             {/* Statistics Cards */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <Card className="bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+                <Card className="bg-linear-to-br from-primary/5 to-primary/10 border-primary/20">
                     <CardHeader className="p-4 pb-2">
                         <CardDescription className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                             <Briefcase className="w-3.5 h-3.5 text-primary" /> Internships
@@ -63,7 +63,7 @@ export default async function CompanyDashboardPage() {
                     </CardHeader>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-blue-500/5 to-blue-500/10 border-blue-500/20">
+                <Card className="bg-linear-to-br from-blue-500/5 to-blue-500/10 border-blue-500/20">
                     <CardHeader className="p-4 pb-2">
                         <CardDescription className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                             <Users className="w-3.5 h-3.5 text-blue-600" /> Applications
@@ -74,7 +74,7 @@ export default async function CompanyDashboardPage() {
                     </CardHeader>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-amber-500/5 to-amber-500/10 border-amber-500/20">
+                <Card className="bg-linear-to-br from-amber-500/5 to-amber-500/10 border-amber-500/20">
                     <CardHeader className="p-4 pb-2">
                         <CardDescription className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                             <Clock className="w-3.5 h-3.5 text-amber-600" /> Pending
@@ -85,7 +85,7 @@ export default async function CompanyDashboardPage() {
                     </CardHeader>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-emerald-500/5 to-emerald-500/10 border-emerald-500/20">
+                <Card className="bg-linear-to-br from-emerald-500/5 to-emerald-500/10 border-emerald-500/20">
                     <CardHeader className="p-4 pb-2">
                         <CardDescription className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                             <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Accepted
@@ -96,7 +96,7 @@ export default async function CompanyDashboardPage() {
                     </CardHeader>
                 </Card>
 
-                <Card className="bg-gradient-to-br from-rose-500/5 to-rose-500/10 border-rose-500/20">
+                <Card className="bg-linear-to-br from-rose-500/5 to-rose-500/10 border-rose-500/20">
                     <CardHeader className="p-4 pb-2">
                         <CardDescription className="text-xs font-semibold uppercase tracking-wider text-muted-foreground flex items-center gap-1.5">
                             <XCircle className="w-3.5 h-3.5 text-rose-600" /> Rejected

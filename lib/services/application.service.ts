@@ -1,5 +1,5 @@
 import { prisma } from "@/lib/db";
-import { Status } from "@prisma/client";
+import { Prisma, Status } from "@prisma/client";
 
 export async function getApplicantsForInternship(
     internshipId: string,
@@ -21,7 +21,7 @@ export async function getApplicantsForInternship(
     }
 
     // Build filter conditions
-    const whereCondition: any = {
+    const whereCondition: Prisma.ApplicationWhereInput = {
         internshipId,
     };
 

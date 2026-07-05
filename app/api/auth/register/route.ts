@@ -25,7 +25,13 @@ export async function POST(req: Request) {
         });
 
         // Omit password hash from response payload
-        const { password: _, ...userWithoutPassword } = user;
+        const userWithoutPassword = {
+            id: user.id,
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            createdAt: user.createdAt,
+        };
 
         const token = signToken({ id: user.id, role: user.role });
         const response = NextResponse.json({ token, user: userWithoutPassword });

@@ -32,41 +32,53 @@ export default function ApplicantsPage({
     // Updating map state to prevent rapid clicks per application
     const [updatingIds, setUpdatingIds] = useState<Record<string, boolean>>({});
 
-    const fetchApplicants = useCallback(async () => {
-        setIsLoading(true);
-        setError(null);
-        try {
-            const queryParams = new URLSearchParams();
-            if (selectedStatus !== "ALL") queryParams.set("status", selectedStatus);
-            if (searchQuery.trim() !== "") queryParams.set("search", searchQuery.trim());
-
-            const res = await fetch(`/api/company/internships/${internshipId}/applicants?${queryParams.toString()}`);
-            
-            if (res.status === 403) {
-                setError("You do not have permission to view applicants for this internship.");
-                return;
-            }
-
-            if (!res.ok) {
-                const data = await res.json();
-                setError(data.error || "Failed to load applicants.");
-                return;
-            }
-
-            const data = await res.json();
-            setApplications(data.data || []);
-            setInternshipTitle(data.internshipTitle || "Internship");
-        } catch (err) {
-            console.error("Error fetching applicants:", err);
-            setError("An error occurred while loading applicants.");
-        } finally {
-            setIsLoading(false);
-        }
-    }, [internshipId, selectedStatus, searchQuery]);
-
     useEffect(() => {
+        let isSubscribed = true;
+
+        async function fetchApplicants() {
+            try {
+                const queryParams = new URLSearchParams();
+                if (selectedStatus !== "ALL") queryParams.set("status", selectedStatus);
+                if (searchQuery.trim() !== "") queryParams.set("search", searchQuery.trim());
+
+                const res = await fetch(`/api/company/internships/${internshipId}/applicants?${queryParams.toString()}`);
+                
+                if (!isSubscribed) return;
+
+                if (res.status === 403) {
+                    setError("You do not have permission to view applicants for this internship.");
+                    setIsLoading(false);
+                    return;
+                }
+
+                if (!res.ok) {
+                    const data = await res.json();
+                    setError(data.error || "Failed to load applicants.");
+                    setIsLoading(false);
+                    return;
+                }
+
+                const data = await res.json();
+                setApplications(data.data || []);
+                setInternshipTitle(data.internshipTitle || "Internship");
+            } catch (err) {
+                if (isSubscribed) {
+                    console.error("Error fetching applicants:", err);
+                    setError("An error occurred while loading applicants.");
+                }
+            } finally {
+                if (isSubscribed) {
+                    setIsLoading(false);
+                }
+            }
+        }
+
         fetchApplicants();
-    }, [fetchApplicants]);
+
+        return () => {
+            isSubscribed = false;
+        };
+    }, [internshipId, selectedStatus, searchQuery]);
 
     // Handle Accept / Reject status update
     const handleStatusChange = useCallback(async (applicationId: string, newStatus: Status) => {
@@ -172,7 +184,9 @@ export default function ApplicantsPage({
                                     : "text-muted-foreground hover:text-foreground"
                             }`}
                         >
-                            {st === "ALL" ? "All" : st.charAt(0) + st.slice(1).toLowerCase()}
+                            {st === "ALL"
+                                ? `All (${statusCounts.ALL})`
+                                : `${st.charAt(0) + st.slice(1).toLowerCase()} (${statusCounts[st as keyof typeof statusCounts]})`}
                         </button>
                     ))}
                 </div>
