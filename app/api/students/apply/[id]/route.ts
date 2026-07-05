@@ -1,42 +1,37 @@
-import { NextRequest, NextResponse } from "next/server";
-import { prisma } from "@/lib/db";
-import { verifyToken } from "@/lib/auth";
+import { getCurrentUser } from "@/lib/current-user";
+import { requireStudent } from "@/lib/permissions";
 import { applyToInternship } from "@/lib/services/application.service";
+import { apiSuccess, apiError, apiForbidden, apiValidationError } from "@/lib/api-response";
+import { logger } from "@/lib/logger";
 
 export async function POST(
-    req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
+    const { id: internshipId } = await params;
+    const user = await getCurrentUser();
+
     try {
-        const { id: internshipId } = await params;
-        const token = req.cookies.get("token")?.value;
-        if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-
-        const decoded = verifyToken(token) as { id: string; role: string } | null;
-        if (!decoded || decoded.role !== "STUDENT") {
-            return NextResponse.json({ error: "Forbidden: Student access required" }, { status: 403 });
-        }
-
-        const studentProfile = await prisma.studentProfile.findUnique({
-            where: { userId: decoded.id }
-        });
-
-        if (!studentProfile) {
-            return NextResponse.json(
-                { error: "Please complete your student profile before applying for internships." },
-                { status: 400 }
-            );
-        }
-
-        const result = await applyToInternship(studentProfile.id, internshipId);
-
-        if ("error" in result) {
-            return NextResponse.json({ error: result.error }, { status: result.code });
-        }
-
-        return NextResponse.json(result.data, { status: 201 });
-    } catch (error) {
-        console.error("POST /api/students/apply/[id] error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+      requireStudent(user);
+    } catch {
+      return apiForbidden("Only students can apply for internships");
     }
+
+    if (!user?.studentId) {
+      return apiValidationError({ studentProfile: ["Please complete your student profile before applying for internships."] });
+    }
+
+    const result = await applyToInternship(user.studentId, internshipId);
+
+    if ("error" in result && result.error) {
+      return apiError(result.error, result.code || 400);
+    }
+
+    logger.info(`Student ${user.studentId} applied to internship ${internshipId}`);
+    return apiSuccess(result.data, 201);
+  } catch (error) {
+    logger.error("Error in POST /api/students/apply/[id]", error);
+    return apiError("Failed to submit internship application", 500);
+  }
 }

@@ -1,52 +1,45 @@
-import { cookies } from "next/headers";
-import { verifyToken } from "@/lib/auth";
-import { getCompanyByUserId } from "@/lib/services/company.service";
+import { getCurrentUser } from "@/lib/current-user";
+import { requireCompany } from "@/lib/permissions";
+import { updateApplicationStatusSchema } from "@/validators/application.validator";
 import { updateApplicationStatus } from "@/lib/services/application.service";
-import { NextResponse } from "next/server";
-import { Status } from "@prisma/client";
+import { apiSuccess, apiValidationError, apiError, apiForbidden, apiNotFound } from "@/lib/api-response";
+import { logger } from "@/lib/logger";
 
 export async function PATCH(
-    req: Request,
-    { params }: { params: Promise<{ id: string }> }
+  req: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  try {
+    const { id: applicationId } = await params;
+    const user = await getCurrentUser();
+
     try {
-        const { id: applicationId } = await params;
-        const cookieStore = await cookies();
-        const token = cookieStore.get("token")?.value;
-
-        if (!token) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-        }
-
-        const decoded = verifyToken(token) as { id: string; role: string } | null;
-        if (!decoded || decoded.role !== "COMPANY") {
-            return NextResponse.json({ error: "Forbidden: Company access required" }, { status: 403 });
-        }
-
-        const company = await getCompanyByUserId(decoded.id);
-        if (!company) {
-            return NextResponse.json({ error: "Company profile not found" }, { status: 404 });
-        }
-
-        const body = await req.json();
-        const { status } = body;
-
-        if (!status || !Object.values(Status).includes(status as Status)) {
-            return NextResponse.json(
-                { error: "Invalid status. Must be ACCEPTED or REJECTED" },
-                { status: 400 }
-            );
-        }
-
-        const result = await updateApplicationStatus(applicationId, company.id, status as Status);
-
-        if ("error" in result) {
-            return NextResponse.json({ error: result.error }, { status: result.code });
-        }
-
-        return NextResponse.json(result.data);
-    } catch (error) {
-        console.error("PATCH /api/applications/[id]/status error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+      requireCompany(user);
+    } catch {
+      return apiForbidden("Only companies are permitted to update applicant statuses");
     }
+
+    if (!user?.companyId) {
+      return apiNotFound("Company profile not found");
+    }
+
+    const body = await req.json();
+    const validation = updateApplicationStatusSchema.safeParse(body);
+
+    if (!validation.success) {
+      return apiValidationError(validation.error.flatten().fieldErrors);
+    }
+
+    const result = await updateApplicationStatus(applicationId, user.companyId, validation.data.status);
+
+    if ("error" in result && result.error) {
+      return apiError(result.error, result.code || 400);
+    }
+
+    logger.info(`Application ${applicationId} status updated to ${validation.data.status} by company ${user.companyId}`);
+    return apiSuccess(result.data);
+  } catch (error) {
+    logger.error("Error in PATCH /api/applications/[id]/status", error);
+    return apiError("Failed to update application status", 500);
+  }
 }

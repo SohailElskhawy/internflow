@@ -35,7 +35,10 @@ export default function StudentApplicationsPage() {
                 if (!res.ok) throw new Error("Failed to load applications");
                 return res.json();
             })
-            .then((data) => setApplications(data))
+            .then((resData) => {
+                const list = Array.isArray(resData) ? resData : (resData.data || []);
+                setApplications(list);
+            })
             .catch((err) => setError(err.message))
             .finally(() => setIsLoading(false));
     }, []);
