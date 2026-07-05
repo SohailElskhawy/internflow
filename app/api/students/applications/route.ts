@@ -1,14 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { verifyToken } from "@/lib/auth";
-import { applyToInternship } from "@/lib/services/application.service";
+import { getStudentApplications } from "@/lib/services/application.service";
 
-export async function POST(
-    req: NextRequest,
-    { params }: { params: Promise<{ id: string }> }
-) {
+export async function GET(req: NextRequest) {
     try {
-        const { id: internshipId } = await params;
         const token = req.cookies.get("token")?.value;
         if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
@@ -22,21 +18,13 @@ export async function POST(
         });
 
         if (!studentProfile) {
-            return NextResponse.json(
-                { error: "Please complete your student profile before applying for internships." },
-                { status: 400 }
-            );
+            return NextResponse.json([], { status: 200 });
         }
 
-        const result = await applyToInternship(studentProfile.id, internshipId);
-
-        if ("error" in result) {
-            return NextResponse.json({ error: result.error }, { status: result.code });
-        }
-
-        return NextResponse.json(result.data, { status: 201 });
+        const applications = await getStudentApplications(studentProfile.id);
+        return NextResponse.json(applications);
     } catch (error) {
-        console.error("POST /api/students/apply/[id] error:", error);
+        console.error("GET /api/students/applications error:", error);
         return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
     }
 }

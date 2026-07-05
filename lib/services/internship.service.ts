@@ -12,10 +12,13 @@ export async function getAllInternships() {
 }
 
 export async function getInternshipById(id: string) {
-    return prisma.internship.findUnique({
+    return await prisma.internship.findUnique({
         where: { id },
         include: {
             company: true,
-        },
-    });
+            _count: {
+                select: { applications: true }
+            }
+        }
+    })
 }
