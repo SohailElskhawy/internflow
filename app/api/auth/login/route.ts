@@ -4,23 +4,40 @@ import { signToken } from "@/lib/auth";
 import { NextResponse } from "next/server";
 
 export async function POST(req: Request) {
-    const { email, password } = await req.json();
+    try {
+        const { email, password } = await req.json();
 
-    const user = await prisma.user.findUnique({ where: { email } });
-    if (!user) return NextResponse.json({ error: "User not found" });
+        if (!email || !password) {
+            return NextResponse.json({ error: "Email and password are required" }, { status: 400 });
+        }
 
-    const valid = await bcrypt.compare(password, user.password);
-    if (!valid) return NextResponse.json({ error: "Wrong password" });
+        const user = await prisma.user.findUnique({ where: { email } });
+        if (!user) {
+            return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+        }
 
-    const token = signToken({ id: user.id, role: user.role });
-    const response = NextResponse.json({ token, user });
+        const valid = await bcrypt.compare(password, user.password);
+        if (!valid) {
+            return NextResponse.json({ error: "Invalid email or password" }, { status: 401 });
+        }
 
-    response.cookies.set("token", token, {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        maxAge: 60 * 60 * 24 * 7,
-    });
+        // Omit password hash from response
+        const { password: _, ...userWithoutPassword } = user;
 
-    return response;
+        const token = signToken({ id: user.id, role: user.role });
+        const response = NextResponse.json({ token, user: userWithoutPassword });
+
+        response.cookies.set("token", token, {
+            httpOnly: true,
+            sameSite: "lax",
+            secure: process.env.NODE_ENV === "production",
+            path: "/",
+            maxAge: 60 * 60 * 24 * 7,
+        });
+
+        return response;
+    } catch (error) {
+        console.error("Login error:", error);
+        return NextResponse.json({ error: "An error occurred during login" }, { status: 500 });
+    }
 }

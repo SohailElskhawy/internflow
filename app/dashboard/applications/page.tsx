@@ -3,8 +3,9 @@
 import { useEffect, useState } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { StatusBadge } from "@/components/ui/status-badge";
 import Link from "next/link";
-import { ArrowLeft, Clock, CheckCircle2, XCircle, Building2, MapPin, Briefcase, RefreshCw } from "lucide-react";
+import { ArrowLeft, Building2, MapPin, Briefcase, RefreshCw } from "lucide-react";
 
 interface StudentApplication {
     id: string;
@@ -38,29 +39,6 @@ export default function StudentApplicationsPage() {
             .catch((err) => setError(err.message))
             .finally(() => setIsLoading(false));
     }, []);
-
-    const renderStatusBadge = (status: StudentApplication["status"]) => {
-        switch (status) {
-            case "ACCEPTED":
-                return (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                        <CheckCircle2 className="w-4 h-4" /> Accepted
-                    </span>
-                );
-            case "REJECTED":
-                return (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-rose-500/10 text-rose-600 border border-rose-500/20">
-                        <XCircle className="w-4 h-4" /> Rejected
-                    </span>
-                );
-            default:
-                return (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-600 border border-amber-500/20">
-                        <Clock className="w-4 h-4" /> Pending Review
-                    </span>
-                );
-        }
-    };
 
     if (isLoading) {
         return (
@@ -123,7 +101,7 @@ export default function StudentApplicationsPage() {
                                         </CardDescription>
                                     </div>
                                     <div className="self-start sm:self-center">
-                                        {renderStatusBadge(app.status)}
+                                        <StatusBadge status={app.status} />
                                     </div>
                                 </div>
                             </CardHeader>

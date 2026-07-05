@@ -2,27 +2,36 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { verifyToken } from "@/lib/auth";
 
-
-
 export async function POST(req: NextRequest) {
-    // 1. Extract and verify token from the secure cookie
-    const token = req.cookies.get("token")?.value;
-    if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    try {
+        const token = req.cookies.get("token")?.value;
+        if (!token) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
-    const decoded = verifyToken(token) as { id: string; role: string } | null;
-    if (!decoded) return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+        const decoded = verifyToken(token) as { id: string; role: string } | null;
+        if (!decoded || decoded.role !== "COMPANY") {
+            return NextResponse.json({ error: "Forbidden: Company access required" }, { status: 403 });
+        }
 
-    const userId = decoded.id;
+        const userId = decoded.id;
 
-    const body = await req.json();
+        const body = await req.json();
+        const { name, description } = body;
 
-    const company = await prisma.company.create({
-        data: {
-            userId,
-            name: body.name,
-            description: body.description,
-        },
-    });
+        if (!name || !description) {
+            return NextResponse.json({ error: "Name and description are required" }, { status: 400 });
+        }
 
-    return NextResponse.json(company);
+        const company = await prisma.company.create({
+            data: {
+                userId,
+                name,
+                description,
+            },
+        });
+
+        return NextResponse.json(company, { status: 201 });
+    } catch (error) {
+        console.error("POST /api/companies error:", error);
+        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+    }
 }

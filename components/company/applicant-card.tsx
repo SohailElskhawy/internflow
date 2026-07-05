@@ -4,8 +4,9 @@ import { memo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { StudentProfileData } from "./student-profile-modal";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Status } from "@prisma/client";
-import { Check, X, Eye, GraduationCap, Clock, CheckCircle2, XCircle } from "lucide-react";
+import { Check, X, Eye, GraduationCap } from "lucide-react";
 
 export interface ApplicationItem {
     id: string;
@@ -41,29 +42,6 @@ export const ApplicantCard = memo(function ApplicantCard({
         onViewProfile(application.student);
     }, [application.student, onViewProfile]);
 
-    const statusBadge = () => {
-        switch (application.status) {
-            case "ACCEPTED":
-                return (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/10 text-emerald-600 border border-emerald-500/20">
-                        <CheckCircle2 className="w-3.5 h-3.5" /> Accepted
-                    </span>
-                );
-            case "REJECTED":
-                return (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-rose-500/10 text-rose-600 border border-rose-500/20">
-                        <XCircle className="w-3.5 h-3.5" /> Rejected
-                    </span>
-                );
-            default:
-                return (
-                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-amber-500/10 text-amber-600 border border-amber-500/20">
-                        <Clock className="w-3.5 h-3.5" /> Pending
-                    </span>
-                );
-        }
-    };
-
     return (
         <Card className="hover:shadow-md transition-shadow duration-200">
             <CardHeader className="pb-3">
@@ -78,7 +56,7 @@ export const ApplicantCard = memo(function ApplicantCard({
                         </p>
                     </div>
                     <div className="self-start sm:self-center">
-                        {statusBadge()}
+                        <StatusBadge status={application.status} />
                     </div>
                 </div>
             </CardHeader>
