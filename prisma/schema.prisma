@@ -26,8 +26,11 @@ model StudentProfile {
     skills     String[]
     cvUrl      String?
 
-    user         User          @relation(fields: [userId], references: [id])
-    applications Application[]
+    user           User            @relation(fields: [userId], references: [id])
+    applications   Application[]
+    resumeAnalysis ResumeAnalysis?
+    matchResults   JobMatchResult[]
+    interviewPreps InterviewPrep[]
 }
 
 model Company {
@@ -50,8 +53,10 @@ model Internship {
     companyId   String
     createdAt   DateTime @default(now())
 
-    company      Company       @relation(fields: [companyId], references: [id])
-    applications Application[]
+    company        Company          @relation(fields: [companyId], references: [id])
+    applications   Application[]
+    matchResults   JobMatchResult[]
+    interviewPreps InterviewPrep[]
 }
 
 model Application {
@@ -63,6 +68,57 @@ model Application {
 
     student    StudentProfile @relation(fields: [studentId], references: [id])
     internship Internship     @relation(fields: [internshipId], references: [id])
+}
+
+model ResumeAnalysis {
+    id          String   @id @default(uuid())
+    studentId   String   @unique
+    summary     String   @db.Text
+    skills      Json
+    education   Json
+    experience  Json
+    strengths   Json
+    weaknesses  Json
+    suggestedRoles Json?
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model JobMatchResult {
+    id                     String   @id @default(uuid())
+    studentId              String
+    internshipId           String
+    matchScore             Int
+    summary                String   @db.Text
+    matchingSkills         Json
+    missingSkills          Json
+    improvementSuggestions Json
+    recruiterTakeaway      String?  @db.Text
+    createdAt              DateTime @default(now())
+    updatedAt              DateTime @updatedAt
+
+    student    StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+    internship Internship     @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+
+    @@unique([studentId, internshipId])
+}
+
+model InterviewPrep {
+    id                 String   @id @default(uuid())
+    studentId          String
+    internshipId       String
+    technicalQuestions Json
+    behavioralQuestions Json
+    studyTopics        Json
+    createdAt          DateTime @default(now())
+    updatedAt          DateTime @updatedAt
+
+    student    StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+    internship Internship     @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+
+    @@unique([studentId, internshipId])
 }
 
 enum Role {

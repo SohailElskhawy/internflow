@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import Link from "next/link";
 import { ArrowLeft, Search, Users, RefreshCw } from "lucide-react";
 
+import { CandidateRankingsTable } from "@/components/ai/CandidateRankingsTable";
+
 export default function ApplicantsPage({
     params,
 }: {
@@ -150,6 +152,9 @@ export default function ApplicantsPage({
                     </div>
                 </div>
             </div>
+
+            {/* AI Top Candidate Rankings Table */}
+            <CandidateRankingsTable internshipId={internshipId} />
 
             {/* Error state */}
             {error && (

@@ -7,6 +7,8 @@ import { getCurrentUser } from "@/lib/current-user";
 import { ApplyButton } from "@/components/student/ApplyButton";
 import { prisma } from "@/lib/db";
 
+import { InternshipAiSection } from "@/components/ai/InternshipAiSection";
+
 export default async function InternshipDetailsPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
   const internship = await getInternshipById(id);
@@ -30,10 +32,12 @@ export default async function InternshipDetailsPage({ params }: { params: Promis
   }
 
   return (
-    <div className="container mx-auto p-4 max-w-4xl mt-10">
-      <Button variant="ghost" asChild className="mb-6">
+    <div className="container mx-auto p-4 max-w-4xl mt-10 space-y-6">
+      <Button variant="ghost" asChild className="mb-2">
         <Link href="/internships">&larr; Back to Listings</Link>
       </Button>
+
+      {isStudent && <InternshipAiSection internshipId={internship.id} />}
 
       <Card>
         <CardHeader>
@@ -92,3 +96,4 @@ export default async function InternshipDetailsPage({ params }: { params: Promis
     </div>
   );
 }
+

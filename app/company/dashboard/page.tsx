@@ -10,6 +10,8 @@ import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Briefcase, Users, Clock, CheckCircle2, XCircle, ArrowRight, Eye, PlusCircle } from "lucide-react";
 
+import { CompanyAiInsightsWidget } from "@/components/ai/CompanyAiInsightsWidget";
+
 export default async function CompanyDashboardPage() {
     const cookieStore = await cookies();
     const token = cookieStore.get("token")?.value;
@@ -49,6 +51,9 @@ export default async function CompanyDashboardPage() {
                     </p>
                 </div>
             </div>
+
+            {/* AI Recruitment Insights Widget */}
+            <CompanyAiInsightsWidget />
 
             {/* Statistics Cards */}
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">

@@ -6,6 +6,8 @@ import { ProfileForm } from "@/components/student/profile-form";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Briefcase, UserCheck, ArrowRight } from "lucide-react";
+import { ResumeAnalysisCard } from "@/components/ai/ResumeAnalysisCard";
+import { AiCareerAdvisorChat } from "@/components/ai/AiCareerAdvisorChat";
 
 export default function DashboardPage() {
     const [profile, setProfile] = useState<Student | null>(null);
@@ -50,53 +52,61 @@ export default function DashboardPage() {
                     <ProfileForm />
                 </div>
             ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    {/* Show profile details */}
-                    <div className="border rounded-xl p-6 bg-card space-y-4 shadow-xs">
-                        <h2 className="text-xl font-semibold flex items-center gap-2">
-                            <UserCheck className="w-5 h-5 text-primary" /> Your Profile Info
-                        </h2>
-                        <ul className="space-y-3 text-sm border-t pt-4">
-                            <li className="flex justify-between">
-                                <span className="text-muted-foreground font-medium">University:</span>
-                                <span className="font-semibold">{profile.university}</span>
-                            </li>
-                            <li className="flex justify-between">
-                                <span className="text-muted-foreground font-medium">Major:</span>
-                                <span className="font-semibold">{profile.major}</span>
-                            </li>
-                            <li className="space-y-1.5 pt-2 border-t">
-                                <span className="text-muted-foreground font-medium block">Skills:</span>
-                                <div className="flex flex-wrap gap-1.5">
-                                    {profile.skills && profile.skills.length > 0 ? (
-                                        profile.skills.map((skill, idx) => (
-                                            <span key={idx} className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
-                                                {skill}
-                                            </span>
-                                        ))
-                                    ) : (
-                                        <span className="text-xs text-muted-foreground">No skills listed.</span>
-                                    )}
-                                </div>
-                            </li>
-                        </ul>
+                <div className="space-y-8">
+                    {/* AI Resume Analysis Section */}
+                    <ResumeAnalysisCard />
 
-                        <div className="pt-4 border-t">
-                            <Button asChild variant="outline" className="w-full gap-2">
-                                <Link href="/dashboard/applications">
-                                    <Briefcase className="w-4 h-4" /> View Application Statuses
-                                </Link>
-                            </Button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                        {/* Show profile details */}
+                        <div className="border rounded-xl p-6 bg-card space-y-4 shadow-xs">
+                            <h2 className="text-xl font-semibold flex items-center gap-2">
+                                <UserCheck className="w-5 h-5 text-primary" /> Your Profile Info
+                            </h2>
+                            <ul className="space-y-3 text-sm border-t pt-4">
+                                <li className="flex justify-between">
+                                    <span className="text-muted-foreground font-medium">University:</span>
+                                    <span className="font-semibold">{profile.university}</span>
+                                </li>
+                                <li className="flex justify-between">
+                                    <span className="text-muted-foreground font-medium">Major:</span>
+                                    <span className="font-semibold">{profile.major}</span>
+                                </li>
+                                <li className="space-y-1.5 pt-2 border-t">
+                                    <span className="text-muted-foreground font-medium block">Skills:</span>
+                                    <div className="flex flex-wrap gap-1.5">
+                                        {profile.skills && profile.skills.length > 0 ? (
+                                            profile.skills.map((skill, idx) => (
+                                                <span key={idx} className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
+                                                    {skill}
+                                                </span>
+                                            ))
+                                        ) : (
+                                            <span className="text-xs text-muted-foreground">No skills listed.</span>
+                                        )}
+                                    </div>
+                                </li>
+                            </ul>
+
+                            <div className="pt-4 border-t">
+                                <Button asChild variant="outline" className="w-full gap-2">
+                                    <Link href="/dashboard/applications">
+                                        <Briefcase className="w-4 h-4" /> View Application Statuses
+                                    </Link>
+                                </Button>
+                            </div>
                         </div>
-                    </div>
 
-                    {/* Or let them update it */}
-                    <div className="border rounded-xl p-6 bg-card shadow-xs">
-                        <h2 className="text-xl font-semibold mb-4">Update Profile</h2>
-                        <ProfileForm />
+                        {/* Or let them update it */}
+                        <div className="border rounded-xl p-6 bg-card shadow-xs">
+                            <h2 className="text-xl font-semibold mb-4">Update Profile</h2>
+                            <ProfileForm />
+                        </div>
                     </div>
                 </div>
             )}
+
+            {/* Floating AI Career Advisor Chat Widget */}
+            <AiCareerAdvisorChat />
         </div>
     );
-}
+}
