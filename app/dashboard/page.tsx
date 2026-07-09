@@ -15,12 +15,20 @@ export default function DashboardPage() {
 
     useEffect(() => {
         fetch("/api/students/profile")
-            .then((res) => res.json())
+            .then((res) => {
+                if (!res.ok) {
+                    throw new Error(`Failed to fetch profile: ${res.status}`);
+                }
+                return res.json();
+            })
             .then((resData) => {
                 const profileData = resData.data || resData;
                 if (profileData && !resData.error && profileData.university) {
                     setProfile(profileData);
                 }
+            })
+            .catch((err) => {
+                console.log("Profile not found or unauthorized:", err.message);
             })
             .finally(() => setIsLoading(false));
     }, []);

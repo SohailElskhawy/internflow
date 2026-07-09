@@ -30,6 +30,9 @@ export const MissingSkillsCard: React.FC<MissingSkillsCardProps> = React.memo(
       setError(null);
       try {
         const res = await fetch(`/api/ai/match?internshipId=${internshipId}`);
+        if (!res.ok) {
+          throw new Error(`Failed to fetch match: ${res.status}`);
+        }
         const json = await res.json();
 
         if (json.success && json.data) {
