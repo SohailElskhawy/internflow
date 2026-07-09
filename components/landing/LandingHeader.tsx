@@ -9,7 +9,12 @@ export function LandingHeader() {
 
   useEffect(() => {
     fetch("/api/auth/me")
-      .then((res) => res.json())
+      .then((res) => {
+        if (!res.ok) {
+          throw new Error(`Failed to fetch user: ${res.status}`);
+        }
+        return res.json();
+      })
       .then((res) => {
         if (res.success && res.data?.user) {
           setUser(res.data.user);

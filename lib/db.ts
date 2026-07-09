@@ -11,7 +11,14 @@ const globalForPrisma = global as unknown as {
 export const prisma =
     globalForPrisma.prisma ||
     new PrismaClient({
-        adapter: new PrismaPg(new Pool({ connectionString })),
+        adapter: new PrismaPg(
+            new Pool({
+                connectionString,
+                ssl: {
+                    rejectUnauthorized: process.env.NODE_ENV === "production",
+                },
+            })
+        ),
         log: ["query"],
     });
 
