@@ -20,7 +20,7 @@ export async function getCurrentUser(): Promise<CurrentUser | null> {
 
     if (!token) return null;
 
-    const decoded = verifyToken(token) as { id: string; role: string } | null;
+    const decoded = verifyToken(token);
     if (!decoded || !decoded.id) return null;
 
     const user = await prisma.user.findUnique({

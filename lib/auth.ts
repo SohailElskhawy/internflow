@@ -14,10 +14,10 @@ export function signToken(payload: { id: string; role: string }) {
     return jwt.sign(payload, secret, { expiresIn: "7d" });
 }
 
-export function verifyToken(token: string) {
+export function verifyToken(token: string): { id: string; role: string } | null {
     try {
         const secret = getJwtSecret();
-        return jwt.verify(token, secret);
+        return jwt.verify(token, secret) as { id: string; role: string };
     } catch {
         return null;
     }
