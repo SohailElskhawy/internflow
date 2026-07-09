@@ -9,7 +9,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
 import { Briefcase, Users, Clock, CheckCircle2, XCircle, ArrowRight, Eye, PlusCircle } from "lucide-react";
-import { LandingHeader } from "@/components/landing/LandingHeader";
 import { NotificationSettings } from "@/components/notification/NotificationSettings";
 
 import { CompanyAiInsightsWidget } from "@/components/ai/CompanyAiInsightsWidget";
@@ -41,9 +40,7 @@ export default async function CompanyDashboardPage() {
     const stats = await getCompanyDashboardStats(company.id);
 
     return (
-        <div className="min-h-screen flex flex-col bg-background selection:bg-primary/20 selection:text-primary">
-            <LandingHeader />
-            <main className="flex-1 container mx-auto p-4 max-w-6xl mt-6 space-y-8 pb-16">
+        <div className="container mx-auto p-4 max-w-6xl mt-6 space-y-8 pb-16">
                 {/* Dashboard Welcome */}
                 <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b pb-6">
                     <div>
@@ -199,7 +196,6 @@ export default async function CompanyDashboardPage() {
                 <div className="border-t pt-8">
                     <NotificationSettings />
                 </div>
-            </main>
         </div>
     );
 }
