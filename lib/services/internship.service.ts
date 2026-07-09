@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { CreateInternshipInput, UpdateInternshipInput } from "@/validators/internship.validator";
+import { eventBus, EVENTS } from "@/lib/events";
 
 export async function getAllInternships(search?: string, type?: string) {
   const whereCondition: Record<string, unknown> = {};
@@ -51,7 +52,7 @@ export async function getInternshipById(id: string) {
 }
 
 export async function createInternship(companyId: string, input: CreateInternshipInput) {
-  return prisma.internship.create({
+  const internship = await prisma.internship.create({
     data: {
       title: input.title,
       description: input.description,
@@ -63,6 +64,18 @@ export async function createInternship(companyId: string, input: CreateInternshi
       company: true,
     },
   });
+
+  // Emit event (non-blocking)
+  eventBus.emit(EVENTS.NEW_INTERNSHIP, {
+    internshipId: internship.id,
+    companyId,
+    title: internship.title,
+    companyName: internship.company.name,
+    location: internship.location,
+    type: internship.type,
+  });
+
+  return internship;
 }
 
 export async function updateInternship(internshipId: string, companyId: string, input: UpdateInternshipInput) {

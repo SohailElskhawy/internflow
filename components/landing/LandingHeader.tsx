@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { Briefcase, User, Sparkles } from "lucide-react";
 import { useEffect, useState } from "react";
+import { NotificationCenter } from "@/components/notification/NotificationCenter";
 
 export function LandingHeader() {
   const [user, setUser] = useState<{ name: string; role: string } | null>(null);
@@ -41,13 +42,16 @@ export function LandingHeader() {
 
         <div className="flex items-center gap-3">
           {user ? (
-            <Link
-              href={user.role === "COMPANY" ? "/company/dashboard" : "/dashboard"}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-primary-foreground bg-primary rounded-lg hover:bg-primary/90 transition-all shadow-sm"
-            >
-              <User className="w-4 h-4" />
-              Dashboard ({user.name.split(" ")[0]})
-            </Link>
+            <>
+              <NotificationCenter />
+              <Link
+                href={user.role === "COMPANY" ? "/company/dashboard" : "/dashboard"}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-primary-foreground bg-primary rounded-lg hover:bg-primary/90 transition-all shadow-sm"
+              >
+                <User className="w-4 h-4" />
+                Dashboard ({user.name.split(" ")[0]})
+              </Link>
+            </>
           ) : (
             <>
               <Link

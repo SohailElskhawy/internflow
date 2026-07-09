@@ -46,6 +46,16 @@ export async function GET(
             return NextResponse.json({ error: "Forbidden: You are not authorized to view this application" }, { status: 403 });
         }
 
+        // Trigger APPLICATION_VIEWED event if viewed by the company
+        if (decoded.role === "COMPANY") {
+            const { eventBus, EVENTS } = await import("@/lib/events");
+            eventBus.emit(EVENTS.APPLICATION_VIEWED, {
+                applicationId: application.id,
+                companyId: application.internship.company.id,
+                studentUserId: application.student.userId
+            });
+        }
+
         return NextResponse.json(application);
     } catch (error) {
         console.error("GET /api/applications/[id] error:", error);

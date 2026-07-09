@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import { signToken } from "@/lib/auth";
 import { LoginInput, RegisterInput } from "@/validators/auth.validator";
 import { Role } from "@prisma/client";
+import { eventBus, EVENTS } from "@/lib/events";
 
 export async function loginUser(input: LoginInput) {
   const normalizedEmail = input.email.trim().toLowerCase();
@@ -100,6 +101,14 @@ export async function registerUser(input: RegisterInput) {
   });
 
   const token = signToken({ id: user.id, role: user.role });
+
+  // Emit registration event
+  eventBus.emit(EVENTS.USER_REGISTERED, {
+    userId: user.id,
+    email: user.email,
+    name: user.name,
+    role: user.role,
+  });
 
   return {
     data: {

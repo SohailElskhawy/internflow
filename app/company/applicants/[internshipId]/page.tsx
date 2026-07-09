@@ -110,9 +110,13 @@ export default function ApplicantsPage({
         }
     }, []);
 
-    const handleViewProfile = useCallback((student: StudentProfileData) => {
+    const handleViewProfile = useCallback((student: StudentProfileData, applicationId: string) => {
         setSelectedStudent(student);
         setIsModalOpen(true);
+        // Call the view API endpoint to register the viewed event
+        fetch(`/api/applications/${applicationId}/view`, { method: "POST" }).catch((err) => {
+            console.error("Failed to mark application as viewed:", err);
+        });
     }, []);
 
     const handleCloseModal = useCallback(() => {
