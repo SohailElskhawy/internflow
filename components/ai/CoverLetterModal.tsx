@@ -78,7 +78,7 @@ export const CoverLetterModal: React.FC<CoverLetterModalProps> = React.memo(({ i
             </p>
             <div>
               <label className="text-xs font-medium text-foreground block mb-1">
-                Optional: Custom notes to emphasize (e.g. "Highlight my React project")
+                Optional: Custom notes to emphasize (e.g. &quot;Highlight my React project&quot;)
               </label>
               <textarea
                 value={customNotes}

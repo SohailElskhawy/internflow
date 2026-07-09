@@ -15,7 +15,7 @@ export const prisma =
             new Pool({
                 connectionString,
                 ssl: {
-                    rejectUnauthorized: false,
+                    rejectUnauthorized: process.env.NODE_ENV === "production",
                 },
             })
         ),

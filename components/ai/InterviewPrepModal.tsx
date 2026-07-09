@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback, useEffect } from "react";
-import { BookOpen, Sparkles, X, ChevronDown, ChevronUp, CheckCircle, HelpCircle, Code2, Users } from "lucide-react";
+import { BookOpen, Sparkles, X, ChevronDown, ChevronUp, CheckCircle, Code2, Users } from "lucide-react";
 
 interface TechnicalQuestion {
   id: number;

@@ -129,9 +129,22 @@ export async function getRankedApplicantsForInternship(companyId: string, intern
     throw new Error("Internship not found or unauthorized");
   }
 
+  const studentIds = internship.applications.map((app) => app.studentId);
+  const existingMatches = await prisma.jobMatchResult.findMany({
+    where: {
+      internshipId,
+      studentId: { in: studentIds },
+    },
+  });
+
+  const matchesMap = new Map(existingMatches.map((m) => [m.studentId, m]));
+
   const applicants = await Promise.all(
     internship.applications.map(async (app) => {
-      const matchResult = await calculateOrGetJobMatch(app.studentId, internshipId);
+      let matchResult = matchesMap.get(app.studentId);
+      if (!matchResult) {
+        matchResult = await calculateOrGetJobMatch(app.studentId, internshipId);
+      }
       return {
         applicationId: app.id,
         status: app.status,

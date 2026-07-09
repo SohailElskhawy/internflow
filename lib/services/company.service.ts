@@ -25,6 +25,7 @@ export async function getCompanyById(companyId: string) {
 
 export async function getAllApprovedCompanies() {
   return prisma.company.findMany({
+    where: { approved: true },
     include: {
       internships: true,
     },

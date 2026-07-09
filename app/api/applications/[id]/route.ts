@@ -33,6 +33,19 @@ export async function GET(
             return NextResponse.json({ error: "Application not found" }, { status: 404 });
         }
 
+        // Check authorization:
+        // Admin: allowed to view any application.
+        // Student: allowed to view their own application.
+        // Company: allowed to view applications for their internships.
+        const isAuthorized =
+            decoded.role === "ADMIN" ||
+            (decoded.role === "STUDENT" && application.student.userId === decoded.id) ||
+            (decoded.role === "COMPANY" && application.internship.company.userId === decoded.id);
+
+        if (!isAuthorized) {
+            return NextResponse.json({ error: "Forbidden: You are not authorized to view this application" }, { status: 403 });
+        }
+
         return NextResponse.json(application);
     } catch (error) {
         console.error("GET /api/applications/[id] error:", error);

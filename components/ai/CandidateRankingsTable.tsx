@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useCallback } from "react";
-import { Sparkles, Trophy, User, ExternalLink } from "lucide-react";
+import { Sparkles, Trophy } from "lucide-react";
 import { MatchScoreBadge } from "./MatchScoreBadge";
 
 interface ApplicantRanking {
