@@ -20,7 +20,12 @@ export function proxy(req: NextRequest) {
   );
 
   // Public API prefixes
-  const publicApiPrefixes = ["/api/auth/login", "/api/auth/register", "/api/auth/logout"];
+  const publicApiPrefixes = [
+    "/api/auth/login",
+    "/api/auth/register",
+    "/api/auth/logout",
+    "/api/health",
+  ];
   const isPublicApi =
     publicApiPrefixes.some((prefix) => pathname.startsWith(prefix)) ||
     (pathname === "/api/internships" && req.method === "GET");
@@ -72,6 +77,10 @@ export function proxy(req: NextRequest) {
   }
 
   return NextResponse.next();
+}
+
+export default function middleware(req: NextRequest) {
+  return proxy(req);
 }
 
 export const config = {

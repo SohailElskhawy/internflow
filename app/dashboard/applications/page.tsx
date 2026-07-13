@@ -5,7 +5,8 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { StatusBadge } from "@/components/ui/status-badge";
 import Link from "next/link";
-import { ArrowLeft, Building2, MapPin, Briefcase, RefreshCw } from "lucide-react";
+import { ArrowLeft, Building2, MapPin, Briefcase, RefreshCw, Milestone } from "lucide-react";
+import { ApplicationTimeline } from "@/components/application/ApplicationTimeline";
 
 interface StudentApplication {
     id: string;
@@ -28,6 +29,7 @@ export default function StudentApplicationsPage() {
     const [applications, setApplications] = useState<StudentApplication[]>([]);
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [error, setError] = useState<string | null>(null);
+    const [expandedAppId, setExpandedAppId] = useState<string | null>(null);
 
     useEffect(() => {
         fetch("/api/students/applications")
@@ -52,7 +54,7 @@ export default function StudentApplicationsPage() {
     }
 
     return (
-        <div className="container mx-auto p-4 max-w-4xl mt-6 space-y-6">
+        <div className="container mx-auto p-4 max-w-4xl mt-6 space-y-6 pb-16">
             <Button variant="ghost" asChild className="gap-2">
                 <Link href="/dashboard">
                     <ArrowLeft className="w-4 h-4" /> Back to Profile
@@ -94,37 +96,66 @@ export default function StudentApplicationsPage() {
                     {applications.map((app) => (
                         <Card key={app.id} className="hover:shadow-md transition-shadow">
                             <CardHeader className="pb-3">
-                                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                                    <div>
-                                        <CardTitle className="text-xl font-bold">
-                                            {app.internship.title}
-                                        </CardTitle>
-                                        <CardDescription className="text-sm font-medium text-primary flex items-center gap-1 mt-0.5">
-                                            <Building2 className="w-3.5 h-3.5" /> {app.internship.company.name}
+                                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                                    <div className="space-y-1.5">
+                                        <div className="flex flex-wrap items-center gap-2">
+                                            <CardTitle className="text-xl font-bold">
+                                                {app.internship.title}
+                                            </CardTitle>
+                                            <span className="text-muted-foreground">&bull;</span>
+                                            <StatusBadge status={app.status} />
+                                        </div>
+                                        <CardDescription className="flex flex-wrap items-center gap-y-1 gap-x-3 text-sm font-medium text-primary">
+                                            <span className="flex items-center gap-1">
+                                                <Building2 className="w-3.5 h-3.5" />
+                                                {app.internship.company.name}
+                                            </span>
+                                            <span className="text-muted-foreground/60 hidden sm:inline">|</span>
+                                            <span className="flex items-center gap-1 text-muted-foreground">
+                                                <MapPin className="w-3.5 h-3.5" />
+                                                {app.internship.location}
+                                            </span>
+                                            <span className="text-muted-foreground/60 hidden sm:inline">|</span>
+                                            <span className="flex items-center gap-1 text-muted-foreground">
+                                                <Briefcase className="w-3.5 h-3.5" />
+                                                {app.internship.type}
+                                            </span>
                                         </CardDescription>
                                     </div>
-                                    <div className="self-start sm:self-center">
-                                        <StatusBadge status={app.status} />
+                                    <div className="text-xs text-muted-foreground sm:text-right font-medium shrink-0">
+                                        Applied: {new Date(app.createdAt).toLocaleDateString(undefined, {
+                                            month: 'short',
+                                            day: 'numeric',
+                                            year: 'numeric'
+                                        })}
                                     </div>
                                 </div>
                             </CardHeader>
-                            <CardContent className="space-y-3">
-                                <div className="flex flex-wrap gap-4 text-xs text-muted-foreground bg-muted/30 p-3 rounded-lg border">
-                                    <span className="flex items-center gap-1 font-medium text-foreground">
-                                        <MapPin className="w-3.5 h-3.5 text-primary" /> {app.internship.location}
-                                    </span>
-                                    <span className="flex items-center gap-1 font-medium text-foreground">
-                                        <Briefcase className="w-3.5 h-3.5 text-primary" /> {app.internship.type}
-                                    </span>
-                                    <span>
-                                        Applied on: {new Date(app.createdAt).toLocaleDateString()}
-                                    </span>
+                            <CardContent className="pb-4">
+                                <div className="flex flex-wrap items-center justify-between gap-3">
+                                    <div className="flex gap-2">
+                                        <Button 
+                                            variant="outline" 
+                                            size="sm" 
+                                            className="gap-1.5 text-xs font-semibold"
+                                            onClick={() => setExpandedAppId(expandedAppId === app.id ? null : app.id)}
+                                        >
+                                            <Milestone className="w-3.5 h-3.5 text-primary" /> 
+                                            {expandedAppId === app.id ? "Hide Status Details" : "View Status Details"}
+                                        </Button>
+                                        <Button variant="ghost" size="sm" asChild className="gap-1.5 text-xs text-muted-foreground">
+                                            <Link href={`/internships/${app.internship.id}`}>
+                                                View Original Posting
+                                            </Link>
+                                        </Button>
+                                    </div>
                                 </div>
-                                <div className="flex justify-end pt-2">
-                                    <Button variant="outline" size="sm" asChild>
-                                        <Link href={`/internships/${app.internship.id}`}>View Internship Details</Link>
-                                    </Button>
-                                </div>
+
+                                {expandedAppId === app.id && (
+                                    <div className="mt-4 pt-4 border-t animate-in fade-in slide-in-from-top-2 duration-200">
+                                        <ApplicationTimeline applicationId={app.id} />
+                                    </div>
+                                )}
                             </CardContent>
                         </Card>
                     ))}

@@ -60,9 +60,10 @@ export default function ApplicantsPage({
                     return;
                 }
 
-                const data = await res.json();
-                setApplications(data.data || []);
-                setInternshipTitle(data.internshipTitle || "Internship");
+                const resData = await res.json();
+                const payload = resData.data;
+                setApplications(payload?.applications || []);
+                setInternshipTitle(payload?.internshipTitle || "Internship");
             } catch (err) {
                 if (isSubscribed) {
                     console.error("Error fetching applicants:", err);
@@ -110,9 +111,13 @@ export default function ApplicantsPage({
         }
     }, []);
 
-    const handleViewProfile = useCallback((student: StudentProfileData) => {
+    const handleViewProfile = useCallback((student: StudentProfileData, applicationId: string) => {
         setSelectedStudent(student);
         setIsModalOpen(true);
+        // Call the view API endpoint to register the viewed event
+        fetch(`/api/applications/${applicationId}/view`, { method: "POST" }).catch((err) => {
+            console.error("Failed to mark application as viewed:", err);
+        });
     }, []);
 
     const handleCloseModal = useCallback(() => {

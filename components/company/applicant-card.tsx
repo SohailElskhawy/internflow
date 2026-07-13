@@ -19,7 +19,7 @@ export interface ApplicationItem {
 
 interface ApplicantCardProps {
     application: ApplicationItem;
-    onViewProfile: (student: StudentProfileData) => void;
+    onViewProfile: (student: StudentProfileData, applicationId: string) => void;
     onStatusChange: (applicationId: string, newStatus: Status) => Promise<void>;
     isUpdating?: boolean;
 }
@@ -39,8 +39,8 @@ export const ApplicantCard = memo(function ApplicantCard({
     }, [application.id, onStatusChange]);
 
     const handleView = useCallback(() => {
-        onViewProfile(application.student);
-    }, [application.student, onViewProfile]);
+        onViewProfile(application.student, application.id);
+    }, [application.student, application.id, onViewProfile]);
 
     return (
         <Card className="hover:shadow-md transition-shadow duration-200">

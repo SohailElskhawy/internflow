@@ -1,7 +1,8 @@
 import { cookies } from "next/headers";
 import { verifyToken } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { NextResponse } from "next/server";
+import { apiSuccess, apiUnauthorized, apiForbidden, apiNotFound, apiError } from "@/lib/api-response";
+import { logger } from "@/lib/logger";
 
 export async function GET(
     req: Request,
@@ -13,12 +14,12 @@ export async function GET(
         const token = cookieStore.get("token")?.value;
 
         if (!token) {
-            return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+            return apiUnauthorized();
         }
 
-        const decoded = verifyToken(token) as { id: string; role: string } | null;
+        const decoded = verifyToken(token);
         if (!decoded) {
-            return NextResponse.json({ error: "Invalid token" }, { status: 401 });
+            return apiUnauthorized("Invalid token");
         }
 
         const application = await prisma.application.findUnique({
@@ -30,7 +31,7 @@ export async function GET(
         });
 
         if (!application) {
-            return NextResponse.json({ error: "Application not found" }, { status: 404 });
+            return apiNotFound("Application not found");
         }
 
         // Check authorization:
@@ -43,12 +44,22 @@ export async function GET(
             (decoded.role === "COMPANY" && application.internship.company.userId === decoded.id);
 
         if (!isAuthorized) {
-            return NextResponse.json({ error: "Forbidden: You are not authorized to view this application" }, { status: 403 });
+            return apiForbidden("You are not authorized to view this application");
         }
 
-        return NextResponse.json(application);
+        // Trigger APPLICATION_VIEWED event if viewed by the company
+        if (decoded.role === "COMPANY") {
+            const { eventBus, EVENTS } = await import("@/lib/events");
+            eventBus.emit(EVENTS.APPLICATION_VIEWED, {
+                applicationId: application.id,
+                companyId: application.internship.company.id,
+                studentUserId: application.student.userId
+            });
+        }
+
+        return apiSuccess(application);
     } catch (error) {
-        console.error("GET /api/applications/[id] error:", error);
-        return NextResponse.json({ error: "Internal Server Error" }, { status: 500 });
+        logger.error("GET /api/applications/[id] error:", error);
+        return apiError("An internal server error occurred while retrieving application");
     }
 }

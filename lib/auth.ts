@@ -1,23 +1,14 @@
 import jwt from "jsonwebtoken";
 import { NextRequest } from "next/server";
-
-function getJwtSecret(): string {
-    const secret = process.env.JWT_SECRET;
-    if (!secret || secret.trim() === "") {
-        throw new Error("CRITICAL SECURITY ERROR: JWT_SECRET environment variable is missing.");
-    }
-    return secret;
-}
+import { env } from "@/src/config/env";
 
 export function signToken(payload: { id: string; role: string }) {
-    const secret = getJwtSecret();
-    return jwt.sign(payload, secret, { expiresIn: "7d" });
+    return jwt.sign(payload, env.JWT_SECRET, { expiresIn: "7d" });
 }
 
-export function verifyToken(token: string) {
+export function verifyToken(token: string): { id: string; role: string } | null {
     try {
-        const secret = getJwtSecret();
-        return jwt.verify(token, secret);
+        return jwt.verify(token, env.JWT_SECRET) as { id: string; role: string };
     } catch {
         return null;
     }

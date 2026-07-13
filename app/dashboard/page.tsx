@@ -8,6 +8,7 @@ import Link from "next/link";
 import { Briefcase, UserCheck, ArrowRight } from "lucide-react";
 import { ResumeAnalysisCard } from "@/components/ai/ResumeAnalysisCard";
 import { AiCareerAdvisorChat } from "@/components/ai/AiCareerAdvisorChat";
+import { NotificationSettings } from "@/components/notification/NotificationSettings";
 
 export default function DashboardPage() {
     const [profile, setProfile] = useState<Student | null>(null);
@@ -109,6 +110,11 @@ export default function DashboardPage() {
                             <h2 className="text-xl font-semibold mb-4">Update Profile</h2>
                             <ProfileForm />
                         </div>
+                    </div>
+
+                    {/* Notification settings panel */}
+                    <div className="pt-4 border-t">
+                        <NotificationSettings />
                     </div>
                 </div>
             )}

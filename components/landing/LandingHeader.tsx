@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { Briefcase, User, Sparkles } from "lucide-react";
+import { Briefcase, User, Sparkles, LogOut } from "lucide-react";
 import { useEffect, useState } from "react";
+import { NotificationCenter } from "@/components/notification/NotificationCenter";
 
 export function LandingHeader() {
   const [user, setUser] = useState<{ name: string; role: string } | null>(null);
@@ -34,20 +35,39 @@ export function LandingHeader() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-8 text-sm font-medium text-muted-foreground">
-          <Link href="#features" className="hover:text-primary transition-colors">Features</Link>
+          <Link href="/#features" className="hover:text-primary transition-colors">Features</Link>
           <Link href="/internships" className="hover:text-primary transition-colors">Browse Internships</Link>
-          <Link href="#employers" className="hover:text-primary transition-colors">For Employers</Link>
+          <Link href="/#employers" className="hover:text-primary transition-colors">For Employers</Link>
         </nav>
 
         <div className="flex items-center gap-3">
           {user ? (
-            <Link
-              href={user.role === "COMPANY" ? "/company/dashboard" : "/dashboard"}
-              className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-primary-foreground bg-primary rounded-lg hover:bg-primary/90 transition-all shadow-sm"
-            >
-              <User className="w-4 h-4" />
-              Dashboard ({user.name.split(" ")[0]})
-            </Link>
+            <>
+              <NotificationCenter />
+              <Link
+                href={user.role === "COMPANY" ? "/company/dashboard" : "/dashboard"}
+                className="inline-flex items-center gap-2 px-4 py-2 text-sm font-semibold text-primary-foreground bg-primary rounded-lg hover:bg-primary/90 transition-all shadow-sm"
+              >
+                <User className="w-4 h-4" />
+                Dashboard ({user.name.split(" ")[0]})
+              </Link>
+              <button
+                onClick={async () => {
+                  try {
+                    const res = await fetch("/api/auth/logout", { method: "POST" });
+                    if (res.ok) {
+                      window.location.href = "/";
+                    }
+                  } catch (err) {
+                    console.error("Failed to log out", err);
+                  }
+                }}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-sm font-semibold text-muted-foreground hover:text-destructive hover:bg-destructive/10 rounded-lg transition-all cursor-pointer"
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">Log Out</span>
+              </button>
+            </>
           ) : (
             <>
               <Link

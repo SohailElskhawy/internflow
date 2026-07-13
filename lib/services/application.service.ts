@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { Prisma, Status } from "@prisma/client";
+import { eventBus, EVENTS } from "@/lib/events";
 
 export async function getApplicantsForInternship(
     internshipId: string,
@@ -104,8 +105,31 @@ export async function updateApplicationStatus(
                         }
                     }
                 }
+            },
+            internship: {
+                include: {
+                    company: {
+                        select: {
+                            id: true,
+                            name: true
+                        }
+                    }
+                }
             }
         }
+    });
+
+    // Emit event (non-blocking)
+    const eventName = status === "ACCEPTED" ? EVENTS.APPLICATION_ACCEPTED : EVENTS.APPLICATION_REJECTED;
+    eventBus.emit(eventName, {
+        applicationId: updated.id,
+        studentId: updated.studentId,
+        internshipId: updated.internshipId,
+        studentName: updated.student.user.name,
+        internshipTitle: updated.internship.title,
+        companyId: updated.internship.company.id,
+        companyName: updated.internship.company.name,
+        studentUserId: updated.student.user.id,
     });
 
     return { data: updated, code: 200 };
@@ -153,6 +177,33 @@ export async function applyToInternship(studentProfileId: string, internshipId: 
             status: "PENDING"
         }
     });
+
+    // Look up details for the event payload in the background/non-blocking or synchronously
+    try {
+        const [student, internship] = await Promise.all([
+            prisma.studentProfile.findUnique({
+                where: { id: studentProfileId },
+                include: { user: { select: { name: true } } }
+            }),
+            prisma.internship.findUnique({
+                where: { id: internshipId },
+                select: { title: true, companyId: true }
+            })
+        ]);
+
+        if (student && internship) {
+            eventBus.emit(EVENTS.APPLICATION_CREATED, {
+                applicationId: application.id,
+                studentId: studentProfileId,
+                internshipId,
+                studentName: student.user.name,
+                internshipTitle: internship.title,
+                companyId: internship.companyId,
+            });
+        }
+    } catch (err) {
+        console.error("Failed to emit APPLICATION_CREATED event:", err);
+    }
 
     return { data: application, code: 201 };
 }
