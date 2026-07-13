@@ -169,11 +169,11 @@ export async function getRankedApplicantsForInternship(companyId: string, intern
         university: app.student.university,
         major: app.student.major,
         skills: app.student.skills,
-        matchScore: matchResult.matchScore,
-        summary: matchResult.summary,
-        matchingSkills: matchResult.matchingSkills as string[],
-        missingSkills: matchResult.missingSkills as string[],
-        recruiterTakeaway: matchResult.recruiterTakeaway,
+        matchScore: matchResult?.matchScore ?? 0,
+        summary: matchResult?.summary ?? "",
+        matchingSkills: (matchResult?.matchingSkills as string[]) ?? [],
+        missingSkills: (matchResult?.missingSkills as string[]) ?? [],
+        recruiterTakeaway: matchResult?.recruiterTakeaway ?? null,
       };
     })
   );

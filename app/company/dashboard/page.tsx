@@ -136,7 +136,7 @@ export default async function CompanyDashboardPage() {
                             </Card>
                         ) : (
                             <div className="space-y-4">
-                                {stats.internships.map((internship) => (
+                                {stats.internships.map((internship: any) => (
                                     <Card key={internship.id} className="hover:shadow-md transition-shadow">
                                         <CardHeader className="pb-3">
                                             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
