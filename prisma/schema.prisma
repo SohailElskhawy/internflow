@@ -1,0 +1,192 @@
+generator client {
+    provider = "prisma-client-js"
+}
+
+datasource db {
+    provider = "postgresql"
+}
+
+model User {
+    id        String   @id @default(uuid())
+    name      String
+    email     String   @unique
+    password  String
+    role      Role
+    createdAt DateTime @default(now())
+
+    student StudentProfile?
+    company Company?
+    notifications          Notification[]
+    notificationPreference NotificationPreference?
+    activityLogs           ActivityLog[]
+}
+
+model StudentProfile {
+    id         String   @id @default(uuid())
+    userId     String   @unique
+    university String
+    major      String
+    skills     String[]
+    cvUrl      String?
+
+    user           User            @relation(fields: [userId], references: [id])
+    applications   Application[]
+    resumeAnalysis ResumeAnalysis?
+    matchResults   JobMatchResult[]
+    interviewPreps InterviewPrep[]
+}
+
+model Company {
+    id          String  @id @default(uuid())
+    userId      String  @unique
+    name        String
+    description String
+    approved    Boolean @default(false)
+
+    user        User         @relation(fields: [userId], references: [id])
+    internships Internship[]
+}
+
+model Internship {
+    id          String   @id @default(uuid())
+    title       String
+    description String
+    location    String
+    type        String
+    companyId   String
+    createdAt   DateTime @default(now())
+
+    company        Company          @relation(fields: [companyId], references: [id])
+    applications   Application[]
+    matchResults   JobMatchResult[]
+    interviewPreps InterviewPrep[]
+
+    @@index([companyId])
+    @@index([createdAt])
+    @@index([location])
+    @@index([type])
+}
+
+model Application {
+    id           String   @id @default(uuid())
+    studentId    String
+    internshipId String
+    status       Status   @default(PENDING)
+    createdAt    DateTime @default(now())
+
+    student    StudentProfile @relation(fields: [studentId], references: [id])
+    internship Internship     @relation(fields: [internshipId], references: [id])
+
+    @@index([studentId])
+    @@index([internshipId])
+    @@index([status])
+    @@index([createdAt])
+}
+
+model ResumeAnalysis {
+    id          String   @id @default(uuid())
+    studentId   String   @unique
+    summary     String   @db.Text
+    skills      Json
+    education   Json
+    experience  Json
+    strengths   Json
+    weaknesses  Json
+    suggestedRoles Json?
+    createdAt   DateTime @default(now())
+    updatedAt   DateTime @updatedAt
+
+    student StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+}
+
+model JobMatchResult {
+    id                     String   @id @default(uuid())
+    studentId              String
+    internshipId           String
+    matchScore             Int
+    summary                String   @db.Text
+    matchingSkills         Json
+    missingSkills          Json
+    improvementSuggestions Json
+    recruiterTakeaway      String?  @db.Text
+    createdAt              DateTime @default(now())
+    updatedAt              DateTime @updatedAt
+
+    student    StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+    internship Internship     @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+
+    @@unique([studentId, internshipId])
+}
+
+model InterviewPrep {
+    id                 String   @id @default(uuid())
+    studentId          String
+    internshipId       String
+    technicalQuestions Json
+    behavioralQuestions Json
+    studyTopics        Json
+    createdAt          DateTime @default(now())
+    updatedAt          DateTime @updatedAt
+
+    student    StudentProfile @relation(fields: [studentId], references: [id], onDelete: Cascade)
+    internship Internship     @relation(fields: [internshipId], references: [id], onDelete: Cascade)
+
+    @@unique([studentId, internshipId])
+}
+
+enum Role {
+    STUDENT
+    COMPANY
+    ADMIN
+}
+
+enum Status {
+    PENDING
+    ACCEPTED
+    REJECTED
+}
+
+model Notification {
+    id        String           @id @default(uuid())
+    userId    String
+    title     String
+    message   String
+    type      NotificationType
+    read      Boolean          @default(false)
+    createdAt DateTime         @default(now())
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([createdAt])
+}
+
+enum NotificationType {
+    APPLICATION
+    INTERNSHIP
+    SYSTEM
+}
+
+model NotificationPreference {
+    id                String  @id @default(uuid())
+    userId            String  @unique
+    emailApplications Boolean @default(true)
+    emailInternships  Boolean @default(true)
+    emailMarketing    Boolean @default(false)
+    pushNotifications Boolean @default(true)
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model ActivityLog {
+    id        String   @id @default(uuid())
+    userId    String
+    action    String
+    metadata  Json
+    createdAt DateTime @default(now())
+
+    user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([createdAt])
+}

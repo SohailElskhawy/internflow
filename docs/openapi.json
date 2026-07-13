@@ -1,0 +1,598 @@
+{
+  "openapi": "3.0.3",
+  "info": {
+    "title": "InternFlow API",
+    "description": "Production-ready Internship & Recruitment Platform API Specification, detailing all routes and parameters including Student, Company, AI, Admin, and Notification services.",
+    "version": "1.0.0"
+  },
+  "servers": [
+    {
+      "url": "/api",
+      "description": "Base API URL"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "cookieAuth": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "token",
+        "description": "Session JWT cookie for authenticated requests"
+      }
+    }
+  },
+  "security": [
+    {
+      "cookieAuth": []
+    }
+  ],
+  "paths": {
+    "/auth/register": {
+      "post": {
+        "summary": "Register a new user (Student or Company)",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "name", "password", "role"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "name": { "type": "string" },
+                  "password": { "type": "string", "minLength": 8 },
+                  "role": { "type": "string", "enum": ["STUDENT", "COMPANY"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "User successfully registered" },
+          "400": { "description": "Validation failed or email already in use" }
+        }
+      }
+    },
+    "/auth/login": {
+      "post": {
+        "summary": "Authenticate user and issue session cookie",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["email", "password"],
+                "properties": {
+                  "email": { "type": "string", "format": "email" },
+                  "password": { "type": "string", "minLength": 6 }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Successfully authenticated, JWT cookie set" },
+          "400": { "description": "Validation failed" },
+          "401": { "description": "Invalid email or password" }
+        }
+      }
+    },
+    "/auth/logout": {
+      "post": {
+        "summary": "Clear session cookie and logout",
+        "responses": {
+          "200": { "description": "Successfully logged out" }
+        }
+      }
+    },
+    "/auth/me": {
+      "get": {
+        "summary": "Get details of currently authenticated user",
+        "responses": {
+          "200": { "description": "Authenticated user object and roles" },
+          "401": { "description": "Unauthenticated" }
+        }
+      }
+    },
+    "/internships": {
+      "get": {
+        "summary": "List all internship postings",
+        "security": [],
+        "parameters": [
+          { "name": "search", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "type", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "location", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "popular", "in": "query", "required": false, "schema": { "type": "boolean" } },
+          { "name": "sort", "in": "query", "required": false, "schema": { "type": "string" } },
+          { "name": "page", "in": "query", "required": false, "schema": { "type": "integer", "default": 1 } },
+          { "name": "limit", "in": "query", "required": false, "schema": { "type": "integer", "default": 20 } }
+        ],
+        "responses": {
+          "200": { "description": "Paginated list of internships" }
+        }
+      },
+      "post": {
+        "summary": "Create internship posting (Company Only)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["title", "description", "location", "type"],
+                "properties": {
+                  "title": { "type": "string" },
+                  "description": { "type": "string" },
+                  "location": { "type": "string" },
+                  "type": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": { "description": "Internship created successfully" },
+          "400": { "description": "Validation failed" },
+          "403": { "description": "Forbidden: Company access required" }
+        }
+      }
+    },
+    "/internships/{id}": {
+      "get": {
+        "summary": "Get specific internship details",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Internship details with company info" },
+          "404": { "description": "Internship not found" }
+        }
+      },
+      "patch": {
+        "summary": "Update specific internship (Company Owner Only)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": { "type": "string" },
+                  "description": { "type": "string" },
+                  "location": { "type": "string" },
+                  "type": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Internship updated successfully" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Internship not found" }
+        }
+      },
+      "delete": {
+        "summary": "Delete specific internship (Company Owner Only)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Internship deleted successfully" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Internship not found" }
+        }
+      }
+    },
+    "/students/profile": {
+      "get": {
+        "summary": "Retrieve student profile details (Student Only)",
+        "responses": {
+          "200": { "description": "Student profile data" },
+          "403": { "description": "Forbidden" }
+        }
+      },
+      "post": {
+        "summary": "Create or update student profile (Student Only)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["university", "major", "skills"],
+                "properties": {
+                  "university": { "type": "string" },
+                  "major": { "type": "string" },
+                  "skills": { "type": "array", "items": { "type": "string" } },
+                  "cvUrl": { "type": "string", "format": "uri" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Student profile updated" },
+          "400": { "description": "Validation failed" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    },
+    "/students/apply/{id}": {
+      "post": {
+        "summary": "Submit internship application (Student Only)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "description": "Internship ID", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "201": { "description": "Application submitted successfully" },
+          "400": { "description": "Already applied or profile incomplete" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    },
+    "/students/applications": {
+      "get": {
+        "summary": "Get logged-in student's application history (Student Only)",
+        "responses": {
+          "200": { "description": "List of student applications" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    },
+    "/companies": {
+      "get": {
+        "summary": "Get list of all approved companies (Public)",
+        "security": [],
+        "responses": {
+          "200": { "description": "Array of approved company profiles" }
+        }
+      },
+      "post": {
+        "summary": "Create or update company profile (Company Only)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["name", "description"],
+                "properties": {
+                  "name": { "type": "string" },
+                  "description": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Company profile updated" },
+          "400": { "description": "Validation failed" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    },
+    "/company/internships/{internshipId}/applicants": {
+      "get": {
+        "summary": "List all applicants for a company's internship (Company Only)",
+        "parameters": [
+          { "name": "internshipId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "List of application records with student profiles" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    },
+    "/applications/{id}": {
+      "get": {
+        "summary": "Get details of a specific application",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Application details" },
+          "404": { "description": "Application not found" }
+        }
+      },
+      "delete": {
+        "summary": "Withdraw application (Student Owner Only)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Application withdrawn successfully" },
+          "403": { "description": "Forbidden" },
+          "404": { "description": "Application not found" }
+        }
+      }
+    },
+    "/applications/{id}/status": {
+      "patch": {
+        "summary": "Update application status (Company Owner Only)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["status"],
+                "properties": {
+                  "status": { "type": "string", "enum": ["PENDING", "ACCEPTED", "REJECTED"] }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Application status updated successfully" },
+          "400": { "description": "Invalid status" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    },
+    "/applications/{id}/timeline": {
+      "get": {
+        "summary": "Retrieve timeline events for an application",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Timeline sequence of status changes" }
+        }
+      }
+    },
+    "/applications/{id}/view": {
+      "get": {
+        "summary": "Log applicant profile view event (Company Only)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Event logged successfully" }
+        }
+      }
+    },
+    "/admin/users": {
+      "get": {
+        "summary": "List all system users (Admin Only)",
+        "responses": {
+          "200": { "description": "Array of user records" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    },
+    "/admin/companies/{id}/approval": {
+      "patch": {
+        "summary": "Approve or reject company registration (Admin Only)",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["approved"],
+                "properties": {
+                  "approved": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Approval status updated" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "summary": "Database connectivity and system health check",
+        "security": [],
+        "responses": {
+          "200": { "description": "System is healthy and database is connected" },
+          "500": { "description": "System is unhealthy" }
+        }
+      }
+    },
+    "/notifications": {
+      "get": {
+        "summary": "Fetch logged-in user notifications",
+        "responses": {
+          "200": { "description": "List of notifications and unread count" },
+          "403": { "description": "Forbidden" }
+        }
+      }
+    },
+    "/notifications/{id}/read": {
+      "patch": {
+        "summary": "Mark single notification as read",
+        "parameters": [
+          { "name": "id", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Notification marked as read" }
+        }
+      }
+    },
+    "/notifications/read-all": {
+      "patch": {
+        "summary": "Mark all user notifications as read",
+        "responses": {
+          "200": { "description": "All notifications marked as read" }
+        }
+      }
+    },
+    "/notifications/preferences": {
+      "get": {
+        "summary": "Get user notification preferences",
+        "responses": {
+          "200": { "description": "Preferences object" }
+        }
+      },
+      "patch": {
+        "summary": "Update user notification preferences",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "emailApplications": { "type": "boolean" },
+                  "emailInternships": { "type": "boolean" },
+                  "emailMarketing": { "type": "boolean" },
+                  "pushNotifications": { "type": "boolean" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Notification preferences updated" }
+        }
+      }
+    },
+    "/ai/analyze": {
+      "post": {
+        "summary": "Analyze student resume/CV using AI (Student Only)",
+        "responses": {
+          "200": { "description": "AI-generated resume feedback and analysis structure" }
+        }
+      }
+    },
+    "/ai/chat": {
+      "post": {
+        "summary": "Chat with the AI career helper",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["messages"],
+                "properties": {
+                  "messages": { "type": "array", "items": { "type": "object" } }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "AI response chunk stream or full text response" }
+        }
+      }
+    },
+    "/ai/company-insights": {
+      "post": {
+        "summary": "Get AI insights on matching applicants (Company Only)",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["internshipId"],
+                "properties": {
+                  "internshipId": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "AI insights text" }
+        }
+      }
+    },
+    "/ai/cover-letter": {
+      "post": {
+        "summary": "Generate AI-tailored cover letter",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["internshipId"],
+                "properties": {
+                  "internshipId": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Generated cover letter markdown text" }
+        }
+      }
+    },
+    "/ai/interview-prep": {
+      "post": {
+        "summary": "Generate interactive AI interview prep content",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["internshipId"],
+                "properties": {
+                  "internshipId": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "Interview prep questions and resources object" }
+        }
+      }
+    },
+    "/ai/match": {
+      "post": {
+        "summary": "Request AI-match calculation between CV and internship",
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "required": ["internshipId"],
+                "properties": {
+                  "internshipId": { "type": "string" }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": { "description": "AI matching score breakdown" }
+        }
+      }
+    },
+    "/ai/rankings/{internshipId}": {
+      "get": {
+        "summary": "Get ranked applicants list by AI score (Company Only)",
+        "parameters": [
+          { "name": "internshipId", "in": "path", "required": true, "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": { "description": "Sorted list of applicants based on AI match results" }
+        }
+      }
+    }
+  }
+}
