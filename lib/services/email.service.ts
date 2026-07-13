@@ -30,7 +30,7 @@ export class EmailService {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          from: "InternFlow <onboarding@resend.dev>",
+          from: "InternFlow <onboarding@internflow.app.com>",
           to: params.to,
           subject: params.subject,
           html: params.html,

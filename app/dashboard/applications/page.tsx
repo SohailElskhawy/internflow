@@ -32,7 +32,7 @@ export default function StudentApplicationsPage() {
     const [expandedAppId, setExpandedAppId] = useState<string | null>(null);
 
     useEffect(() => {
-        fetch("/api/students/applications")
+        fetch(`/api/students/applications?t=${Date.now()}`)
             .then((res) => {
                 if (!res.ok) throw new Error("Failed to load applications");
                 return res.json();
