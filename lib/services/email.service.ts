@@ -1,4 +1,6 @@
-const RESEND_API_KEY = process.env.RESEND_API_KEY;
+import { env } from "@/src/config/env";
+
+const RESEND_API_KEY = env.RESEND_API_KEY;
 
 export class EmailService {
   /**

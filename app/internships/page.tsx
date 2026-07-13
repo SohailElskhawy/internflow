@@ -36,7 +36,7 @@ export default async function InternshipsPage({
           <Briefcase className="w-12 h-12 text-muted-foreground mx-auto" />
           <h2 className="text-2xl font-bold tracking-tight">No internships found</h2>
           <p className="text-muted-foreground max-w-md mx-auto">
-            We couldn't find any opportunities matching your criteria. Try adjusting your search query or filters.
+            We couldn&apos;t find any opportunities matching your criteria. Try adjusting your search query or filters.
           </p>
         </div>
       ) : (

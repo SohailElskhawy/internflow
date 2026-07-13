@@ -60,9 +60,10 @@ export default function ApplicantsPage({
                     return;
                 }
 
-                const data = await res.json();
-                setApplications(data.data || []);
-                setInternshipTitle(data.internshipTitle || "Internship");
+                const resData = await res.json();
+                const payload = resData.data;
+                setApplications(payload?.applications || []);
+                setInternshipTitle(payload?.internshipTitle || "Internship");
             } catch (err) {
                 if (isSubscribed) {
                     console.error("Error fetching applicants:", err);

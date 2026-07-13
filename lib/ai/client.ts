@@ -1,7 +1,8 @@
 import { GoogleGenAI } from "@google/genai";
 import { logger } from "@/lib/logger";
+import { env } from "@/src/config/env";
 
-const apiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+const apiKey = env.GEMINI_API_KEY;
 
 const aiClient = apiKey ? new GoogleGenAI({ apiKey }) : null;
 
