@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { generateGeminiJson } from "@/lib/ai/client";
 import { jobMatchingPrompt } from "@/prompts/job-matching.prompt";
 import { logger } from "@/lib/logger";
+import { getCachedData, setCachedData, invalidateCache } from "@/lib/redis";
 
 export interface JobMatchAnalysisResult {
   matchScore: number;
@@ -13,6 +14,12 @@ export interface JobMatchAnalysisResult {
 }
 
 export async function calculateOrGetJobMatch(studentId: string, internshipId: string) {
+  const cacheKey = `ai:match:${studentId}:${internshipId}`;
+  const cached = await getCachedData<any>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const existingMatch = await prisma.jobMatchResult.findUnique({
     where: {
       studentId_internshipId: { studentId, internshipId },
@@ -20,6 +27,7 @@ export async function calculateOrGetJobMatch(studentId: string, internshipId: st
   });
 
   if (existingMatch) {
+    await setCachedData(cacheKey, existingMatch, 86400); // 24 hours TTL
     return existingMatch;
   }
 
@@ -105,6 +113,12 @@ Description: ${internship.description}
   });
 
   logger.info(`Job match score generated (${analysis.matchScore}%) for student ${studentId} & internship ${internshipId}`);
+  
+  await setCachedData(cacheKey, saved, 86400); // 24 hours TTL
+
+  // Invalidate company AI recruiter insights
+  await invalidateCache(`ai:insights:company:${internship.company.id}`);
+
   return saved;
 }
 

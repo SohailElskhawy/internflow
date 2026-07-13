@@ -5,6 +5,7 @@ import {
   getInternshipById,
   updateInternship,
   deleteInternship,
+  getPopularInternships,
 } from "@/lib/services/internship.service";
 import { prisma } from "@/lib/db";
 
@@ -80,9 +81,16 @@ describe("Internship Service Tests", () => {
   });
 
   it("should successfully retrieve all internships with filters", async () => {
-    const list = await getAllInternships("Backend", "Remote");
-    expect(list.length).toBeGreaterThanOrEqual(1);
-    expect(list[0].title).toContain("Backend");
+    const { internships, total } = await getAllInternships("Backend", "Remote");
+    expect(internships.length).toBeGreaterThanOrEqual(1);
+    expect(total).toBeGreaterThanOrEqual(1);
+    expect(internships[0].title).toContain("Backend");
+  });
+
+  it("should successfully retrieve popular internships", async () => {
+    const popular = await getPopularInternships(2);
+    expect(popular).toBeDefined();
+    expect(popular.length).toBeLessThanOrEqual(2);
   });
 
   it("should successfully retrieve an internship by ID", async () => {

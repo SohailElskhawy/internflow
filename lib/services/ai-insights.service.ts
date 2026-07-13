@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/db";
 import { logger } from "@/lib/logger";
+import { getCachedData, setCachedData } from "@/lib/redis";
 
 export interface CompanyAiInsightsResult {
   totalApplicantsAnalyzed: number;
@@ -10,6 +11,13 @@ export interface CompanyAiInsightsResult {
 }
 
 export async function getCompanyAiInsights(companyId: string): Promise<CompanyAiInsightsResult> {
+  const cacheKey = `ai:insights:company:${companyId}`;
+  const cachedInsights = await getCachedData<CompanyAiInsightsResult>(cacheKey);
+  if (cachedInsights) {
+    logger.info(`Returning cached AI recruiter insights for company ID: ${companyId}`);
+    return cachedInsights;
+  }
+
   logger.info(`Computing AI recruiter insights for company ID: ${companyId}`);
 
   const companyInternships = await prisma.internship.findMany({
@@ -20,13 +28,15 @@ export async function getCompanyAiInsights(companyId: string): Promise<CompanyAi
   const internshipIds = companyInternships.map((i) => i.id);
 
   if (internshipIds.length === 0) {
-    return {
+    const result = {
       totalApplicantsAnalyzed: 0,
       averageMatchScore: 0,
       topSkills: [],
       missingSkillGaps: [],
       topUniversities: [],
     };
+    await setCachedData(cacheKey, result, 86400);
+    return result;
   }
 
   const matchResults = await prisma.jobMatchResult.findMany({
@@ -37,7 +47,7 @@ export async function getCompanyAiInsights(companyId: string): Promise<CompanyAi
   });
 
   if (matchResults.length === 0) {
-    return {
+    const result = {
       totalApplicantsAnalyzed: 0,
       averageMatchScore: 0,
       topSkills: [
@@ -56,6 +66,8 @@ export async function getCompanyAiInsights(companyId: string): Promise<CompanyAi
         { university: "Boğaziçi University", count: 3 },
       ],
     };
+    await setCachedData(cacheKey, result, 86400);
+    return result;
   }
 
   const totalScore = matchResults.reduce((acc, r) => acc + r.matchScore, 0);
@@ -86,11 +98,14 @@ export async function getCompanyAiInsights(companyId: string): Promise<CompanyAi
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
 
-  return {
+  const result = {
     totalApplicantsAnalyzed: matchResults.length,
     averageMatchScore: avgScore,
     topSkills: sortTop(skillCounts).map((i) => ({ skill: i.skill, count: i.count })),
     missingSkillGaps: sortTop(gapCounts).map((i) => ({ skill: i.skill, count: i.count })),
     topUniversities: sortTop(uniCounts).map((i) => ({ university: i.university, count: i.count })),
   };
+
+  await setCachedData(cacheKey, result, 86400);
+  return result;
 }

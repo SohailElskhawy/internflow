@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { generateGeminiJson } from "@/lib/ai/client";
 import { interviewPrepPrompt } from "@/prompts/interview-prep.prompt";
 import { logger } from "@/lib/logger";
+import { getCachedData, setCachedData } from "@/lib/redis";
 
 export interface TechnicalQuestion {
   id: number;
@@ -30,6 +31,12 @@ export interface InterviewPrepResult {
 }
 
 export async function generateOrGetInterviewPrep(studentId: string, internshipId: string) {
+  const cacheKey = `ai:prep:${studentId}:${internshipId}`;
+  const cached = await getCachedData<any>(cacheKey);
+  if (cached) {
+    return cached;
+  }
+
   const existingPrep = await prisma.interviewPrep.findUnique({
     where: {
       studentId_internshipId: { studentId, internshipId },
@@ -37,6 +44,7 @@ export async function generateOrGetInterviewPrep(studentId: string, internshipId
   });
 
   if (existingPrep) {
+    await setCachedData(cacheKey, existingPrep, 86400); // 24 hours TTL
     return existingPrep;
   }
 
@@ -210,5 +218,6 @@ Description: ${internship.description}
   });
 
   logger.info(`Generated AI Interview Prep kit for student ${studentId} & internship ${internshipId}`);
+  await setCachedData(cacheKey, saved, 86400); // 24 hours TTL
   return saved;
 }

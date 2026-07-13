@@ -1,6 +1,14 @@
 import { prisma } from "@/lib/db";
 
+import { getCachedData, setCachedData } from "@/lib/redis";
+
 export async function getCompanyDashboardStats(companyId: string) {
+    const cacheKey = `dashboard:company:${companyId}`;
+    const cachedStats = await getCachedData<any>(cacheKey);
+    if (cachedStats) {
+        return cachedStats;
+    }
+
     const internships = await prisma.internship.findMany({
         where: { companyId },
         include: {
@@ -34,7 +42,7 @@ export async function getCompanyDashboardStats(companyId: string) {
         });
     });
 
-    return {
+    const result = {
         internshipCount: internships.length,
         totalApplications,
         pendingCount,
@@ -50,4 +58,7 @@ export async function getCompanyDashboardStats(companyId: string) {
             applicationCount: item._count.applications
         }))
     };
+
+    await setCachedData(cacheKey, result, 86400); // Cache for 24 hours
+    return result;
 }

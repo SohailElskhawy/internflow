@@ -2,6 +2,7 @@ import { prisma } from "@/lib/db";
 import { generateGeminiJson } from "@/lib/ai/client";
 import { resumeAnalysisPrompt } from "@/prompts/resume-analysis.prompt";
 import { logger } from "@/lib/logger";
+import { getCachedData, setCachedData } from "@/lib/redis";
 
 export interface ResumeAnalysisResult {
   summary: string;
@@ -107,11 +108,24 @@ export async function analyzeStudentResume(studentId: string, rawText: string) {
   });
 
   logger.info(`Resume analysis completed and stored for student ID: ${studentId}`);
+  
+  const cacheKey = `ai:resume:${studentId}`;
+  await setCachedData(cacheKey, savedAnalysis, 86400); // 24 hours TTL
+
   return savedAnalysis;
 }
 
 export async function getStudentResumeAnalysis(studentId: string) {
-  return await prisma.resumeAnalysis.findUnique({
+  const cacheKey = `ai:resume:${studentId}`;
+  const cached = await getCachedData<any>(cacheKey);
+  if (cached) return cached;
+
+  const analysis = await prisma.resumeAnalysis.findUnique({
     where: { studentId },
   });
+
+  if (analysis) {
+    await setCachedData(cacheKey, analysis, 86400); // 24 hours TTL
+  }
+  return analysis;
 }

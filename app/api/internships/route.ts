@@ -1,18 +1,39 @@
 import { getCurrentUser } from "@/lib/current-user";
 import { requireCompany } from "@/lib/permissions";
 import { createInternshipSchema } from "@/validators/internship.validator";
-import { getAllInternships, createInternship } from "@/lib/services/internship.service";
+import { getAllInternships, createInternship, getPopularInternships } from "@/lib/services/internship.service";
 import { apiSuccess, apiValidationError, apiError, apiForbidden, apiNotFound } from "@/lib/api-response";
 import { logger } from "@/lib/logger";
 
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
+    const popular = searchParams.get("popular") === "true";
+
+    if (popular) {
+      const popularInternships = await getPopularInternships();
+      return apiSuccess(popularInternships);
+    }
+
     const search = searchParams.get("search") || undefined;
     const type = searchParams.get("type") || undefined;
+    const location = searchParams.get("location") || undefined;
+    const sort = searchParams.get("sort") || undefined;
+    const page = parseInt(searchParams.get("page") || "1", 10);
+    const limit = parseInt(searchParams.get("limit") || "20", 10);
 
-    const internships = await getAllInternships(search, type);
-    return apiSuccess(internships);
+    const user = await getCurrentUser();
+    const studentId = user?.studentId || null;
+
+    const result = await getAllInternships(search, type, {
+      location,
+      sort,
+      page,
+      limit,
+      studentId,
+    });
+
+    return apiSuccess(result);
   } catch (error) {
     logger.error("Error in GET /api/internships", error);
     return apiError("Failed to fetch internships", 500);

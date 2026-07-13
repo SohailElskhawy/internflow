@@ -1,6 +1,7 @@
 import { prisma } from "@/lib/db";
 import { Prisma, Status } from "@prisma/client";
 import { eventBus, EVENTS } from "@/lib/events";
+import { invalidateCache } from "@/lib/redis";
 
 export async function getApplicantsForInternship(
     internshipId: string,
@@ -132,6 +133,10 @@ export async function updateApplicationStatus(
         studentUserId: updated.student.user.id,
     });
 
+    // Invalidate company dashboard cache
+    await invalidateCache(`dashboard:company:${companyId}`);
+    await invalidateCache(`ai:insights:company:${companyId}`);
+
     return { data: updated, code: 200 };
 }
 
@@ -200,6 +205,10 @@ export async function applyToInternship(studentProfileId: string, internshipId: 
                 internshipTitle: internship.title,
                 companyId: internship.companyId,
             });
+
+            // Invalidate company dashboard cache
+            await invalidateCache(`dashboard:company:${internship.companyId}`);
+            await invalidateCache(`ai:insights:company:${internship.companyId}`);
         }
     } catch (err) {
         console.error("Failed to emit APPLICATION_CREATED event:", err);

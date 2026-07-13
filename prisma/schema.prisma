@@ -60,6 +60,11 @@ model Internship {
     applications   Application[]
     matchResults   JobMatchResult[]
     interviewPreps InterviewPrep[]
+
+    @@index([companyId])
+    @@index([createdAt])
+    @@index([location])
+    @@index([type])
 }
 
 model Application {
@@ -71,6 +76,11 @@ model Application {
 
     student    StudentProfile @relation(fields: [studentId], references: [id])
     internship Internship     @relation(fields: [internshipId], references: [id])
+
+    @@index([studentId])
+    @@index([internshipId])
+    @@index([status])
+    @@index([createdAt])
 }
 
 model ResumeAnalysis {
@@ -146,6 +156,9 @@ model Notification {
     createdAt DateTime         @default(now())
 
     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([createdAt])
 }
 
 enum NotificationType {
@@ -173,4 +186,7 @@ model ActivityLog {
     createdAt DateTime @default(now())
 
     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+    @@index([userId])
+    @@index([createdAt])
 }
