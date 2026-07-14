@@ -7,9 +7,10 @@ let redis: Redis | null = null;
 
 try {
   redis = new Redis(REDIS_URL, {
-    maxRetriesPerRequest: 1,
+    maxRetriesPerRequest: 0,
     lazyConnect: true,
-    connectTimeout: 2000, // 2 seconds timeout
+    connectTimeout: 500, // 500ms timeout
+    retryStrategy: () => null, // Stop reconnecting if server is down
   });
 
   redis.on("error", (err) => {

@@ -3,6 +3,7 @@ import { apiSuccess } from "@/lib/api-response";
 
 export async function POST() {
   const cookieStore = await cookies();
+  cookieStore.delete("token");
   cookieStore.set("token", "", {
     path: "/",
     maxAge: 0,

@@ -88,6 +88,7 @@ test("E2E Student Apply & Company Accept Flow", async ({ page }) => {
   await expect(page.locator("text=Welcome back, E2E Company Corp")).toBeVisible();
 
   // Create an Internship
+  await page.waitForTimeout(1500);
   await page.locator("#title").fill("E2E Playwright Intern");
   await page.locator("#description").fill("Looking for an intern to automate testing workflows with Playwright.");
   await page.locator("#location").fill("San Francisco, CA");
@@ -166,7 +167,7 @@ test("E2E Student Apply & Company Accept Flow", async ({ page }) => {
   await expect(page.locator("text=Applicants for E2E Playwright Intern")).toBeVisible();
 
   // Verify student name is in applicants list
-  await expect(page.locator("text=E2E Student Name")).toBeVisible();
+  await expect(page.locator("text=E2E Student Name").first()).toBeVisible();
 
   // Click Accept button on the student's applicant card
   const applicantCard = page.locator(".hover\\:shadow-md").filter({ hasText: "E2E Student Name" });
