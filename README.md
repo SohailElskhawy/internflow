@@ -2,7 +2,7 @@
 
 > An AI-powered internship and recruitment platform connecting students and companies with intelligent matching, resume analysis, and automatic notifications.
 
-![Hero Image](public/screenshots/hero.png)
+![Hero Image](public/screenshots/1.png)
 
 ---
 
@@ -226,20 +226,20 @@ Open [http://localhost:3000](http://localhost:3000) in your browser.
 Here are previews of key interfaces within the InternFlow platform:
 
 ### Student Dashboard
-![Student Dashboard](public/screenshots/1.png)
+![Student Dashboard](public/screenshots/2.png)
 
 ### Company Dashboard
-![Company Dashboard](public/screenshots/2.png)
+![Company Dashboard](public/screenshots/3.png)
 
 ### AI Analysis
-![AI Analysis](public/screenshots/3.png)
+![AI Analysis](public/screenshots/4.png)
 
 ### Applicant Ranking
-![Applicant Ranking](public/screenshots/4.png)
+![Applicant Ranking](public/screenshots/5.png)
 
-### Notifications
-![Notifications](public/screenshots/5.png)
+### Internships
+![Internships](public/screenshots/6.png)
 
 ### API Documentation
 Interactive API docs are exposed at `/docs` when the server is running.
-![API Documentation](public/screenshots/6.png)
+![API Documentation](public/screenshots/7.png)
